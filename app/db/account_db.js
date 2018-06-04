@@ -78,8 +78,8 @@ class AmountDatabase  {
                   'id INTEGER PRIMARY KEY  AUTOINCREMENT,' +  
                   'tx_token VARCHAR,'+
                   'tx_time VARCHAR,'+  
-                  'tx_result INTEGER,' + 
-                  'tx_hash VARCHAR,' + 
+                  'tx_result INTEGER,' + //1成功 0失败 -1 正在转账pending
+                  'tx_hash VARCHAR,' +  
                   'tx_value VARCHAR,' +    
                   'tx_sender VARCHAR,' + 
                   'tx_receiver VARCHAR,' + 

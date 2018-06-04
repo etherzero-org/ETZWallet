@@ -14,14 +14,30 @@ import { setScaleText, scaleSize,ifIphoneX } from '../../../utils/adapter'
 class RecordListItem extends Component{
   static defaultProps = {
     moneyTextColor: '#657CAB',
-    payFail: false,
     listIcon: require('../../../images/xhdpi/etz_logo.png'),
     style: {},
     listIconStyle: {width: scaleSize(44),height:scaleSize(44)},
     onPressListItem: undefined,
+    payStatus: 1,//支付状态 1 0 -1
   }
   render(){
-    const { payFail,moneyTextColor,listIcon,style,listIconStyle, onPressListItem, receiverAddress, receiverTime, receiverVal,unit} = this.props
+    const { moneyTextColor,listIcon,style,listIconStyle, onPressListItem, receiverAddress, receiverTime, receiverVal,unit, payStatus} = this.props
+
+    let payText = ''
+    switch(payStatus){
+      case -1:
+        payText = '正在转账'
+        break
+      case 0:
+        payText = '转账失败'
+        break
+      case 1:
+        payText = '转账成功'
+        break
+      default:
+        break
+    }
+
     return(
       <TouchableOpacity style={[styles.container,pubS.rowCenterJus,pubS.padding50,style]} activeOpacity={ onPressListItem ? .7 : 1 } onPress={onPressListItem}>
         <Image source={listIcon} style={listIconStyle}/>
@@ -31,13 +47,11 @@ class RecordListItem extends Component{
             <Text style={pubS.font24_4}>{receiverTime}</Text>
           </View>
 
-          <View style={[styles.sendPrice,pubS.paddingCloumn20,payFail ? null : pubS.center]}>
-            <Text style={{fontSize: setScaleText(28),color:moneyTextColor}}>{`${receiverVal} ${unit}`}</Text>
-            {
-              payFail ?
-              <Text style={pubS.font24_1}>faied</Text>
-              : null
-            }
+          <View style={[styles.sendPrice,pubS.paddingCloumn20,payStatus === 1 ? pubS.center:null]}>
+            <Text style={{fontSize: setScaleText(28),color:moneyTextColor}}>{`${receiverVal} ${unit}`}</Text>              
+              {
+                payStatus === 1 ? null : <Text style={pubS.font24_1}>{payText}</Text>
+              }
           </View>
         </View>
       </TouchableOpacity>

@@ -23,17 +23,22 @@ export default function tradingManageReducer (state = initState,action) {
 }
 
 const saveSuc = (state,action) => {
+  console.log('插入数据库成功 saveRecordSuc11')
   return {
     ...state,
     saveRecordSuc: true
   }
 }
 const saveFail = (state,action) => {
+  console.log('插入数据库失败 saveRecordSuc11')
   return {
     ...state,
     saveRecordSuc: false
   }
 }
 const saveStart = (state,action) => {
-	return state
+	return {
+    ...state,
+    saveRecordSuc: false
+  }
 }

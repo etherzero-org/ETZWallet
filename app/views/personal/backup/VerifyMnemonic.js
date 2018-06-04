@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   BackHandler,
+  Button
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle } from '../../../styles/'
@@ -144,9 +145,10 @@ class VerifyMnemonic extends Component{
 			loadingVisible: false
 		})
 		if(this.props.mnemonicText.split(" ").toString() === compareString.slice(1,)){
-			this.setState({
-				visible: true,
-			})
+			// this.setState({
+			// 	visible: true,
+			// })
+			this.onCreateAction()
 		}else{
 			Alert.alert(
 		        '',
@@ -167,21 +169,24 @@ class VerifyMnemonic extends Component{
 			selectedContainer: []
 		})
 	}
-	onModalBtn = () => {
+
+	onCreateAction = () => {
 		const { mnemonicValue, create_usernane, create_psd, create_prompt,create_from } = this.props.accountManageReducer
-		this.onHide()
 		this.setState({
-			loadingVisible: true
+			loadingVisible: true,
+			// visible: false,
+			selectedContainer: []
+		},() => {
+		    setTimeout(() => {
+		      this.props.dispatch(createAccountAction({
+		      	mnemonicValue: mnemonicValue,
+		        userNameVal: create_usernane,
+		        psdVal: create_psd,
+		        promptVal: create_prompt,
+		        from: create_from
+		      }))
+		    },1000)
 		})
-	    setTimeout(() => {
-	      this.props.dispatch(createAccountAction({
-	      	mnemonicValue: mnemonicValue,
-	        userNameVal: create_usernane,
-	        psdVal: create_psd,
-	        promptVal: create_prompt,
-	        from: create_from
-	      }))
-	    },1000)
 
 		// this.props.navigator.popToRoot({ animated: false })
 		

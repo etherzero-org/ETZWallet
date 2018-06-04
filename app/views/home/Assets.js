@@ -12,8 +12,8 @@ import {
   Button,
   BackHandler,
   StatusBar,
+  Alert,
   AppState,
-
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle,MainThemeNavColor,ScanNavStyle } from '../../styles/'
@@ -27,6 +27,8 @@ import { splitDecimal, scientificToNumber} from '../../utils/splitNumber'
 import {Scan} from '../../components/'
 
 import { insertToTokenAction,initSelectedListAction,refreshTokenAction,fetchTokenAction } from '../../actions/tokenManageAction'
+import { insert2TradingDBAction } from '../../actions/tradingManageAction'
+import { resetTxStatusAction } from '../../actions/txAction'
 import I18n from 'react-native-i18n'
 import Toast from 'react-native-toast'
 
@@ -151,7 +153,6 @@ class Assets extends Component{
 
     findAccountsList.map((value,index) => {
       if(value.is_selected === 1){
-        
         this.props.dispatch(refreshTokenAction(value.address,fetchTokenList))
        
         this.setState({
@@ -170,7 +171,6 @@ class Assets extends Component{
       return;
     })
   }
-
 
 
 
@@ -217,6 +217,61 @@ class Assets extends Component{
       })
       return;
     }
+
+    //交易状态
+
+    const { txEtzStatus,txEtzHash, txErrorMsg,txErrorOrder } = nextProps.txReducer
+    if(this.props.txReducer.txEtzStatus !== txEtzStatus){
+      let sendResult = 1
+      if(txEtzStatus === 1){
+         this.props.dispatch(refreshTokenAction(this.state.curAddr,fetchTokenList))
+          //更新轉賬狀態
+         this.updatePending(1,txEtzHash)
+         Alert.alert(I18n.t('send_successful'))
+       }else{
+         sendResult = 0
+          if(!!txErrorOrder){
+            this.updatePending(0,txEtzHash)
+          }else{
+            this.deletePending()
+          }
+         Alert.alert(txErrorMsg)
+         return
+       }
+      this.props.dispatch(resetTxStatusAction())
+    }
+  }
+
+  async deletePending(){
+    let delRes = await accountDB.deleteAccount({
+      sql: 'delete from trading where tx_result = -1',
+      d_id: [],
+    })
+  }
+
+  async updatePending(status,hash){
+
+    let tx = await web3.eth.getTransaction(hash)
+    let txBlock  = await web3.eth.getBlock(tx.blockNumber)
+     console.log('更新hash值',txBlock)
+    let block = txBlock.number
+    let time = txBlock.timestamp
+
+
+    let updateRes = await accountDB.updateTable({
+      sql: 'update trading set tx_result = ?,tx_time = ?,tx_hash = ?,tx_block_number = ? where tx_result = -1 ',
+      parame: [status,time,hash,block]
+    })
+    if(updateRes === 'success'){
+      console.log('updatePending成功')
+
+    }else{
+      if(updateRes === 'fail'){
+         console.log('updatePending失败')
+
+      }
+    }
+    
   }
 
   componentWillUnmount(){
@@ -275,7 +330,8 @@ class Assets extends Component{
         navBarHidden: true
       }),
       passProps:{
-        curToken: 'ETZ'
+        curToken: 'ETZ',
+        currencySymbol: this.state.currencySymbol,
       }
     })
   }
@@ -706,6 +762,7 @@ const styles = StyleSheet.create({
 export default connect(
   state => ({
     accountManageReducer: state.accountManageReducer,
-    tokenManageReducer: state.tokenManageReducer
+    tokenManageReducer: state.tokenManageReducer,
+    txReducer: state.txReducer
   })
 )(Assets)

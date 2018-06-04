@@ -1,6 +1,7 @@
 import * as types from '../constants/tradingManageConstant'
 import tradingDBOpation from '../utils/tradingDBOpation'
 const insert2TradingDBAction = (data) => {
+	
 	const start = () => {
 		return {
 			type: types.SAVE_TO_RECORD_START,

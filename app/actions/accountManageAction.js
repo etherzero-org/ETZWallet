@@ -413,7 +413,6 @@ const copyKeystoreAction = (addr) => {
 		})
 	}
 }
-
 export {
 	switchAccountAction,
 	importAccountAction,

@@ -7,13 +7,15 @@ import accountManageReducer from '../reducers/accountManageReducer'
 import tokenManageReducer from '../reducers/tokenManageReducer'
 import switchLanguageReducer from '../reducers/switchLanguageReducer'
 import activityReducer from '../reducers/activityReducer'
+import txReducer from '../reducers/txReducer'
 
 const rootReducer = combineReducers({
   	tradingManageReducer,
   	accountManageReducer,
   	tokenManageReducer,
   	switchLanguageReducer,
-  	activityReducer
+  	activityReducer,
+  	txReducer
 })
 const store = createStore(
   rootReducer,

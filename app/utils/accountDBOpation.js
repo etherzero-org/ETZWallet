@@ -115,6 +115,7 @@ async function onImportAccount(options){
 	  		user.password_promp= hintValue
 		    user.account_name = userName  
 		    user.backup_status = 0  
+		    user.backup_keystore = 0
 		    user.is_selected = selected
 		    user.assets_total = '0'
 		    user.address = keyStore.address
@@ -230,6 +231,7 @@ async function onCreateAccount(options){
     user.mnemonic = ''
     user.account_name = userNameVal  
     user.backup_status = 0  
+    user.backup_keystore = 0
     user.assets_total = '0'
     user.is_selected = selected
     user.address = keyStore.address  
@@ -432,7 +434,7 @@ const accountDBOpation = {
 	},
 	updateBackupKeystore: (options) => {
 		onUpdateBackupKeystore(options)
- 	}
+	}
 }
 
 export default accountDBOpation

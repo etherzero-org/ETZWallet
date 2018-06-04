@@ -4,21 +4,25 @@ async function onSaveRecord(options){
 	const { parames, saveSuccess, saveFail, } = options
 	const { tx_hash, tx_value, tx_sender, tx_receiver, tx_note, tx_token, tx_result,currentAccountName } = parames.data
 
+
 	let tradingData = [],  
-  		trading = {};
+  		trading = {},
+  		block = 0,
+		time = '',
+		hashVal = '';
 
-	
-	let tx = await web3.eth.getTransaction(tx_hash)
-
-	let txBlock  = await web3.eth.getBlock(tx.blockNumber)
-
-	let block = txBlock.number
-  	let time = txBlock.timestamp
+  	if(tx_hash.length !== 0){
+		let tx = await web3.eth.getTransaction(tx_hash)
+		let txBlock  = await web3.eth.getBlock(tx.blockNumber)
+  		block = txBlock.number
+		time = txBlock.timestamp
+		hashVal = tx_hash
+  	}
 
 	trading.tx_account_name = currentAccountName
 	trading.tx_time = time
 	trading.tx_result = tx_result
-	trading.tx_hash = tx_hash
+	trading.tx_hash = hashVal
 	trading.tx_value = tx_value
 	trading.tx_sender = tx_sender
 	trading.tx_receiver = tx_receiver
@@ -34,6 +38,10 @@ async function onSaveRecord(options){
     }else{
     	saveFail(false)
     }
+
+
+  	
+	
 }
 const tradingDBOpation = {
 	

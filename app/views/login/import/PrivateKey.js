@@ -24,7 +24,7 @@ class PrivateKey extends Component{
   constructor(props){
     super(props)
     this.state = {
-      privKeyVal: '',
+      privKeyVal: 'cbeeb5d633c8db16aa66394536f7e294fdc428b182074867f6dba5db24f3958a',
       psdVal: '',
       repeadPsdVal: '',
       privKeyWarning: '',
@@ -33,6 +33,7 @@ class PrivateKey extends Component{
       userNameVal: '',
       userNameWarning: '',
       hintValue: ''
+      
     }
   }
   componentWillMount(){

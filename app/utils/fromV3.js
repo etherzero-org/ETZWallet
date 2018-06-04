@@ -33,12 +33,10 @@ function toLowerCaseKeys(obj) {
   }, {});
 }
 
-function fromV3(input, password, nonStrict) {
+async function fromV3(input, password, nonStrict) {
     
     input = toLowerCaseKeys(input)
     
-    console.log('input====',input)
-
     var json = (typeof input === 'object') ? input : JSON.parse(nonStrict ? input : input)
 
     if (json.version !== 3) {
@@ -49,27 +47,25 @@ function fromV3(input, password, nonStrict) {
     if (json.crypto.kdf === 'scrypt') {
         kdfparams = json.crypto.kdfparams
         
-        derivedKey = scrypt(new Buffer(password), new Buffer(kdfparams.salt, 'hex'), kdfparams.n, kdfparams.r, kdfparams.p, kdfparams.dklen)
-
-        console.log('derivedKey=',derivedKey)
+        derivedKey = await scrypt(new Buffer(password), new Buffer(kdfparams.salt, 'hex'), kdfparams.n, kdfparams.r, kdfparams.p, kdfparams.dklen)
 
     } else if (json.crypto.kdf === 'pbkdf2') {
         kdfparams = json.crypto.kdfparams
         if (kdfparams.prf !== 'hmac-sha256') {
             throw 'Unsupported parameters to PBKDF2'
         }
-        derivedKey = crypto.pbkdf2Sync(new Buffer(password), new Buffer(kdfparams.salt, 'hex'), kdfparams.c, kdfparams.dklen, 'sha256')
+        derivedKey = await crypto.pbkdf2Sync(new Buffer(password), new Buffer(kdfparams.salt, 'hex'), kdfparams.c, kdfparams.dklen, 'sha256')
     } else {
         throw 'Unsupported key derivation scheme'
     }
     var ciphertext = new Buffer(json.crypto.ciphertext, 'hex')
 
-    var mac = sha3(Buffer.concat([derivedKey.slice(16, 32), ciphertext]))
+    var mac = await sha3(Buffer.concat([derivedKey.slice(16, 32), ciphertext]))
     if (mac.toString('hex') !== json.crypto.mac) {
         throw I18n.t('password_is_wrong')
     }
 
-    var decipher = crypto.createDecipheriv(json.crypto.cipher, derivedKey.slice(0, 16), new Buffer(json.crypto.cipherparams.iv, 'hex'))
+    var decipher = await crypto.createDecipheriv(json.crypto.cipher, derivedKey.slice(0, 16), new Buffer(json.crypto.cipherparams.iv, 'hex'))
     var seed = decipherBuffer(decipher, ciphertext, 'hex')
     while (seed.length < 32) {
         var nullBuff = new Buffer([0x00]);

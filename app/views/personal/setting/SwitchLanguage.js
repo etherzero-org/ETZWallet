@@ -16,7 +16,7 @@ import { switchLanguageAction } from '../../../actions/switchLanguageAction'
 import { connect } from 'react-redux' 
 import { toSplash } from '../../../root' 
 import I18n from 'react-native-i18n'
-
+import SplashScreen from 'react-native-splash-screen'
 class Language extends Component {
 	constructor(props){
 		super(props)
@@ -67,7 +67,6 @@ class SwitchLanguage extends Component{
 	    		})
 
 				this.props.dispatch(switchLanguageAction(this.state.selectedLan))
-
 				toSplash()
 	    	}
 	  	}
@@ -83,21 +82,21 @@ class SwitchLanguage extends Component{
   // 		}).catch( err => {
 
   // 		})
-  		if(Platform.OS === 'ios'){
-	  		switch(I18n.currentLocale()){
-				case 'zh-Hans-US':
-					this.onSelectZh()
-					break
-				case 'en':
-					this.onSelectEn()
-					break
-				case 'ru-RU':
-					this.onSelectRu()
-					break
-				default:
-					break
-			}
-  		}else{
+  	// 	if(Platform.OS === 'ios'){
+	  // 		switch(I18n.currentLocale()){
+			// 	case 'zh-Hans-US':
+			// 		this.onSelectZh()
+			// 		break
+			// 	case 'en':
+			// 		this.onSelectEn()
+			// 		break
+			// 	case 'ru-RU':
+			// 		this.onSelectRu()
+			// 		break
+			// 	default:
+			// 		break
+			// }
+  	// 	}else{
   			switch(I18n.currentLocale()){
 				case 'zh-CN':
 					this.onSelectZh()
@@ -111,7 +110,7 @@ class SwitchLanguage extends Component{
 				default:
 					break
 			}
-  		}
+  		// }
   			
   	}
 

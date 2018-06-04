@@ -39,6 +39,8 @@ const initState = {
 	create_psd: '',
 	create_prompt: '',
 	create_from: '',
+
+	copyKeystoreSuc: false,
 }
 export default function accountManageReducer (state = initState,action) {
 	switch(action.type){
@@ -124,10 +126,19 @@ export default function accountManageReducer (state = initState,action) {
 		case types.GEN_MNEMONIC_SUC:
 			return genMneSuc(state,action)
 			break
+		case types.COPY_KEYSTORE_BACKUP:
+			return copyKeyBackup(state,action)
+			break
 		default:
 			return state
 			break
 
+	}
+}
+const copyKeyBackup = (state,action) => {
+	return{
+		...state,
+		copyKeystoreSuc: true
 	}
 }
 const genMneStart = (state,action) => {

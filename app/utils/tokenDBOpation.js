@@ -11,7 +11,6 @@ async function onFetchToken(options){
       		sql: 'delete from token'
     	})
 	}
-
 	try {
 		let res = await fetch('http://52.74.3.64/token-list.txt',{
 			method: 'GET',
@@ -20,6 +19,7 @@ async function onFetchToken(options){
 		        'Content-Type': 'application/json',
 		    }
 		})
+		console.log('onFetchToken   res===',res)
 		let response = null
 		response = await res.json()
 		console.log('onFetchToken   response66666666666===',response)
@@ -76,6 +76,7 @@ async function onFetchToken(options){
 			fetchTokenFail()
 		}
 	} catch(err){
+		console.log('fetch token error',err)
 		fetchTokenFail()
 	}
 

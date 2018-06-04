@@ -51,7 +51,9 @@ class BackUpAccount extends Component{
       loadingText: '',
       visible: false,
       localMnemonic: '',
-      currentList: {}
+      currentList: {},
+      pasModalVisible: -1,//0  私钥 1 删除  2 keystore 3助记词
+      keystoreBackuped: false,
     }
     this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this))
   }
@@ -69,6 +71,11 @@ class BackUpAccount extends Component{
         if(list.backup_status === 1){
           this.setState({
             privBackuped: true
+          })
+        }
+        if(list.backup_keystore === 1){
+          this.setState({
+            keystoreBackuped: true
           })
         }
         if(!list.mnemonic){
@@ -113,7 +120,7 @@ class BackUpAccount extends Component{
     }
 
     //修改密码成功后  keystore需要使用reducer中的
-    const { globalAccountsList } = nextProps.accountManageReducer
+    const { globalAccountsList,copyKeystoreSuc } = nextProps.accountManageReducer
 
     console.log('修改密码成功后  keystore需要使用reducer中的',globalAccountsList)
     globalAccountsList.map((list,index) => {
@@ -126,6 +133,13 @@ class BackUpAccount extends Component{
         this.setState({ keyStore:keys })
       }
     })
+
+    if(this.props.accountManageReducer.copyKeystoreSuc !== copyKeystoreSuc && copyKeystoreSuc){
+      this.setState({
+        keystoreBackuped: true
+      })
+    }
+
   }
 
   getKeys(list){
@@ -186,6 +200,7 @@ class BackUpAccount extends Component{
     this.setState({
       iptPsdVisible: true,
       isDelAccount: true,
+      pasModalVisible: 1
     })
   }
 
@@ -206,14 +221,16 @@ class BackUpAccount extends Component{
 
   backUpPrivBtn = () => {
     this.setState({
-      iptPsdVisible: true
+      iptPsdVisible: true,
+      pasModalVisible: 0,
     })
   }
   onHide = () => {
     this.setState({
       iptPsdVisible: false,
       psdVal: '',
-      backupMnemonic: false,
+      // backupMnemonic: false,
+      pasModalVisible: -1,
       isDelAccount: false,
       visible: false
     })
@@ -234,61 +251,37 @@ class BackUpAccount extends Component{
   }
 
   onConfirm = () => {
-    const { psdVal,backupMnemonic,keyStore,isDelAccount,  } = this.state
+    const { psdVal,backupMnemonic,keyStore,isDelAccount } = this.state
     this.setState({
       loadingText: I18n.t("unlocking"),
       iptPsdVisible: false,
     })
     setTimeout(() => {
-      console.log('onConfirm222222')
       this.setState({
         visible: true,
       })
-      
     },500)
-    setTimeout(() => {
+    setTimeout(async () => {
+      console.log('keyStore==',keyStore)
+      console.log('psdVal==',psdVal)
       try {
-        const newWallet = fromV3(keyStore,psdVal)
-        console.log('备份解析的私钥newWallet',newWallet)
-        let priv = newWallet.privKey.toString('hex')
-        console.log('备份解析的私钥',priv)
-        if(backupMnemonic){
-          this.props.navigator.push({
-            screen: 'write_mnemonic',
-            title: '',
-            backButtonTitle:I18n.t('back'),
-            backButtonHidden:false,
-            navigatorStyle: DetailNavigatorStyle,
-            passProps: {
-              currentAddress: this.props.address,
-              localMnemonic: this.state.localMnemonic
-            }
-          })
-        }else{
-          if(isDelAccount){
-            setTimeout(() => {
-              this.setState({
-                dVisible: true,
-              })
-            },1000)  
-          }else{
-            setTimeout(() => {
-              this.setState({
-                privKey: priv,
-                pKeyVisible: true,
-              })
-            },1000)
-          }
-        }
-        this.onHide()
+          const wal = await fromV3(keyStore,psdVal)
+          console.log('wal',wal)
+          let priv = wal.privKey.toString('hex')
+          console.log('备份解析的私钥',priv)
+          this.showDiffModal(priv)
+
+          this.onHide()
+
       } catch (err) {
-        
+        console.log('fromV3 err',err)
+
         Alert.alert(
           I18n.t('title_error'),
           `${err}`,
           [
-            {text:'OK',onPress:() => 
-            this.setState({
+            {text:I18n.t('ok'),onPress:() => 
+            this.setState({ 
               psdVal: '',
               loadingText: '',
               visible: false,
@@ -299,8 +292,70 @@ class BackUpAccount extends Component{
       }
     },1000)
   }
+  showDiffModal(priv){
+    switch(this.state.pasModalVisible){//0  私钥 1 删除  2 keystore 3助记词
+      case 0:
+        this.showPrivModal(priv)
+        break
+      case 1:
+        this.showDelModal()
+        break
+      case 2:
+        this.toExportKey()
+        break
+      case 3:
+        this.showMneModal()
+        break
+      default:
+        break
+    }
+  }
+  showPrivModal = () => {
+    setTimeout(() => {
+      this.setState({
+        privKey: priv,
+        pKeyVisible: true,
+      })
+    },1000)
+  }
+  showDelModal = () => {
+    setTimeout(() => {
+      this.setState({
+        dVisible: true,
+      })
+    },1000) 
+  }
+  toExportKey = () => {
+    const { currentList, keyStore} = this.state
+    this.props.dispatch(passPropsAction({
+      currentList,
+      keyStore
+    }))
 
-
+    this.props.navigator.push({
+      screen: 'export_keystore',
+      title:I18n.t('export_keystore'),
+      backButtonTitle:I18n.t('back'),
+      backButtonHidden:false,
+      navigatorStyle: DetailNavigatorStyle,
+      passProps:{
+        curAddr:this.props.address
+      }
+    })
+  }
+  showMneModal = () => {
+    this.props.navigator.push({
+      screen: 'write_mnemonic',
+      title: '',
+      backButtonTitle:I18n.t('back'),
+      backButtonHidden:false,
+      navigatorStyle: DetailNavigatorStyle,
+      passProps: {
+        currentAddress: this.props.address,
+        localMnemonic: this.state.localMnemonic
+      }
+    })
+  }
 
 
   onCopyBtn = () => {
@@ -310,33 +365,41 @@ class BackUpAccount extends Component{
   backupMnemonicBtn = () => {
     this.setState({
       iptPsdVisible: true,
-      backupMnemonic: true
+      // backupMnemonic: true
+      pasModalVisible: 3,
     })
 
   }
   backUpKeyStoreBtn = () => {
-    const { keyStore } = this.state
-    let k = JSON.stringify(keyStore)
-    Share.share({
-      message: k,
-      title: I18n.t('backup_keystore_title'),
-    }, {
-      dialogTitle: I18n.t('share_your_keystore'),
+
+    this.setState({
+      iptPsdVisible: true,
+      pasModalVisible: 2,
     })
-    .then(this._showResult)
-    .catch((error) => Toast.showLongBottom(I18n.t('share_error')))
-  }
-  _showResult = (result) => {
-    if (result.action === Share.sharedAction) {
-      if (result.activityType) {
 
-      } else {
+    // let k = JSON.stringify(keyStore)
 
-      }
-    } else if (result.action === Share.dismissedAction) {
-      Toast.showLongBottom(I18n.t('share_error'))
-    }
+
+    // Share.share({
+    //   message: k,
+    //   title: I18n.t('backup_keystore_title'),
+    // }, {
+    //   dialogTitle: I18n.t('share_your_keystore'),
+    // })
+    // .then(this._showResult)
+    // .catch((error) => Toast.showLongBottom(I18n.t('share_error')))
   }
+  // _showResult = (result) => {
+  //   if (result.action === Share.sharedAction) {
+  //     if (result.activityType) {
+
+  //     } else {
+
+  //     }
+  //   } else if (result.action === Share.dismissedAction) {
+  //     Toast.showLongBottom(I18n.t('share_error'))
+  //   }
+  // }
 
 
   modifyPsd = () => {
@@ -354,7 +417,7 @@ class BackUpAccount extends Component{
     })
   }
   render(){
-    const { iptPsdVisible,psdVal,pKeyVisible,privKey,privBackuped,mncBackuped,keyStore,dVisible, visible } = this.state
+    const { iptPsdVisible,psdVal,pKeyVisible,privKey,privBackuped,mncBackuped,keyStore,dVisible, visible, keystoreBackuped } = this.state
     const { isLoading,delMnemonicSuc } = this.props.accountManageReducer
     return(
       <View style={[pubS.container,{backgroundColor:'#fff',alignItems:'center'}]}>
@@ -398,14 +461,19 @@ class BackUpAccount extends Component{
             />
           }
 
+          {
+            keystoreBackuped ? 
+            <View/>
+            : 
+            <Btn
+              btnPress={() => this.backUpKeyStoreBtn() }
+              bgColor={'#2B8AFF'}
+              opacity={.7}
+              btnText={I18n.t('backup_keystore_1')}
+              btnMarginTop={scaleSize(20)}
+            />
+          }
           
-          <Btn
-            btnPress={() => this.backUpKeyStoreBtn() }
-            bgColor={'#2B8AFF'}
-            opacity={.7}
-            btnText={I18n.t('backup_keystore_1')}
-            btnMarginTop={scaleSize(20)}
-          />
           
           {
             privBackuped ? 

@@ -60,7 +60,7 @@ async function onImportAccount(options){
 				let keyStore2 = toLowerCaseKeys(keyStore1)
 				let newWallet 
 				try{
-					newWallet = fromV3(keyStore2,keystorePsd)//验证密码
+					newWallet = await fromV3(keyStore2,keystorePsd)//验证密码
 				} catch (err){
 					importFailure(err) 
 					return
@@ -115,6 +115,7 @@ async function onImportAccount(options){
 	  		user.password_promp= hintValue
 		    user.account_name = userName  
 		    user.backup_status = 0  
+		    user.backup_keystore = 0
 		    user.is_selected = selected
 		    user.assets_total = '0'
 		    user.address = keyStore.address
@@ -230,6 +231,7 @@ async function onCreateAccount(options){
     user.mnemonic = ''
     user.account_name = userNameVal  
     user.backup_status = 0  
+    user.backup_keystore = 0
     user.assets_total = '0'
     user.is_selected = selected
     user.address = keyStore.address  
@@ -338,7 +340,7 @@ async function onModifyPassword(options){
 	const { keys, oldPsd, newPsd, currentList,} = parames 
 	try {
 		//解密出私钥
-		const newWallet = fromV3(keys,oldPsd)
+		const newWallet = await fromV3(keys,oldPsd)
 
         let priv = newWallet.privKey.toString('hex')
         //私钥+新密码 算出新的keystore
@@ -392,6 +394,15 @@ async function onModifyPassword(options){
 		modifyFail(err)
 	}
 }
+
+async function onUpdateBackupKeystore(options){
+	let res = await accountDB.updateTable({
+		sql: 'update account set backup_keystore = 1 where address= ? ',
+		parame: [options.parames.addr]
+	})
+	console.log('更新keystore备份状态',res)
+}
+
 const accountDBOpation = {
 	importAccount:(options) => {
 		onImportAccount(options)
@@ -420,6 +431,9 @@ const accountDBOpation = {
 	},
 	genMnemonic: (options) => {
 		onGenMnemonic(options)
+	},
+	updateBackupKeystore: (options) => {
+		onUpdateBackupKeystore(options)
 	}
 }
 

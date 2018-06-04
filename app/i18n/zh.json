@@ -163,5 +163,15 @@
   "modifying":"正在修改密码",
   "modify_err":"修改密码出错,请重试",
   "modify_suc":"修改密码成功",
-  
+  "export_keystore":"导出KeyStore",
+  "copy_keystore":"复制Keystore",
+  "copy_ed":"已复制",
+  "offline_save":"离线保存",
+  "offline_save_1":"请复制Keystone文件到安全且离线的地方保存，切勿保存到邮件，记事本，网盘，聊天工具等应用上，否则有泄密风险",
+  "no_use_net":"请勿使用网络传输",
+  "no_use_net_1":"请勿通过网络工具传输Keystone文件，一旦被黑客获取将造成不可挽回的资产损失",
+  "psd_save_safe":"密码保险箱保存",
+  "psd_save_safe_1":"如需在线保存，建议使用安全等级更高的1 Password等密码保管软件保存Keystone",
+  "no_screenshots":"请勿截图",
+  "no_screenshots_1":"请确保四周无人且无任何摄像头！勿用截图或拍照的方式保存Keystone文件！"
 }	  

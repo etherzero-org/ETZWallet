@@ -81,6 +81,7 @@ class Payment extends Component{
   } 
 
   componentWillMount(){
+
     const { fetchTokenList } = this.props.tokenManageReducer 
 
     const { currentAccount } = this.props.accountManageReducer
@@ -392,7 +393,7 @@ class Payment extends Component{
     const { fetchTokenList } = this.props.tokenManageReducer 
     try{  
       
-      let newWallet = fromV3(this.state.keyStore,txPsdVal)
+      let newWallet = await fromV3(this.state.keyStore,txPsdVal)
       let privKey = newWallet.privKey.toString('hex')
 
       console.log('privKey==',privKey)
@@ -523,24 +524,24 @@ class Payment extends Component{
 
     try{
       
-      let newWallet = fromV3(this.state.keyStore,txPsdVal)
+      let newWallet = await fromV3(this.state.keyStore,txPsdVal)
       let privKey = newWallet.privKey.toString('hex')
-
+      console.log('txValue==',txValue)
+      console.log('currentTokenDecimals==',currentTokenDecimals)
       let txNumber = parseFloat(txValue) *  Math.pow(10,currentTokenDecimals)
+      console.log('txNumber====',txNumber)
       let txNum = ''
       if(/e/.test(`${txNumber}`)){
         let t = scientificToNumber(`${txNumber}`.replace('+',''))
-        txNum = `${t}0`
+        txNum = `${t}`
       }else{
         txNum = `${txNumber}`
       }
-      // console.log('txNum==',txNum)
+      console.log('txNum==',txNum)
 
       let hex16 = parseInt(txNum).toString(16)
       
-      // console.log('hex16',hex16)
-
-      // let hex16 = parseInt(txNumber).toString(16)      
+      console.log('hex16',hex16)
 
       let myContract = new web3.eth.Contract(contractAbi, currentTokenAddress)
 

@@ -29,7 +29,8 @@ class AmountDatabase  {
               'mnemonic VARCHAR,'+
               'is_selected INTEGER,' + 
               'assets_total VARCHAR,' + 
-              'backup_status INTEGER,' +    
+              'backup_status INTEGER,' +   
+              'backup_keystore INTEGER,' + 
               'address VARCHAR,' + 
               'kid VARCHAR,' + 
               'version INTEGER,' + 
@@ -231,12 +232,12 @@ class AmountDatabase  {
 
             return Promise.all(accountData.map(async (query,idx) => {
                 try {
-                    const { account_name, mnemonic, is_selected, assets_total, backup_status, address, kid, version, cipher, ciphertext, kdf, mac, dklen, salt, n,r,p,iv, password_promp } = query
+                    const { account_name, mnemonic, is_selected, assets_total, backup_status, backup_keystore, address, kid, version, cipher, ciphertext, kdf, mac, dklen, salt, n,r,p,iv, password_promp } = query
 
 
-                    let sql = "INSERT INTO account(account_name,mnemonic,is_selected,assets_total,backup_status,address,kid,version,cipher,ciphertext,kdf,mac,dklen,salt,n,r,p,iv,password_promp)"+  
-                              "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-                    await tx.executeSql(sql,[account_name,mnemonic,is_selected,assets_total,backup_status,address,kid,version,cipher,ciphertext,kdf,mac,dklen,salt,n,r,p,iv,password_promp])
+                    let sql = "INSERT INTO account(account_name,mnemonic,is_selected,assets_total,backup_status,backup_keystore,address,kid,version,cipher,ciphertext,kdf,mac,dklen,salt,n,r,p,iv,password_promp)"+  
+                              "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                    await tx.executeSql(sql,[account_name,mnemonic,is_selected,assets_total,backup_status,backup_keystore,address,kid,version,cipher,ciphertext,kdf,mac,dklen,salt,n,r,p,iv,password_promp])
 
                     insertSuccess = true
 

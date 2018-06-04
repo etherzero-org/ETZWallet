@@ -23,6 +23,7 @@ import SwitchLanguage from '../views/personal/setting/SwitchLanguage'
 import BackUpAccount from '../views/personal/backup/'
 import WriteMnemonic from '../views/personal/backup/WriteMnemonic'
 import VerifyMnemonic from '../views/personal/backup/VerifyMnemonic'
+import ExportKeyStore from '../views/personal/backup/ExportKeyStore'
 
 
 import Assets from '../views/home/Assets'
@@ -75,6 +76,7 @@ function registerScreens() {
   Navigation.registerComponent('download_app', () => DownLoadApp,store,Provider)
   Navigation.registerComponent('receive_candy', () => ReceiveCandy,store,Provider)
   Navigation.registerComponent('modify_password', () => ModifyPassword,store,Provider)
+  Navigation.registerComponent('export_keystore', () => ExportKeyStore,store,Provider)
 
 }
 

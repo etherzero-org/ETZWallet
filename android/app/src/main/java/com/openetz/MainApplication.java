@@ -17,7 +17,6 @@ import com.reactnativenavigation.NavigationApplication;
 
 import com.bitgo.randombytes.RandomBytesPackage;
 import org.reactnative.camera.RNCameraPackage;
-import io.realm.react.RealmReactPackage;
 import org.pgsqlite.SQLitePluginPackage;
 import com.AlexanderZaytsev.RNI18n.RNI18nPackage;
 import com.remobile.toast.RCTToastPackage; 
@@ -34,7 +33,6 @@ public class MainApplication extends NavigationApplication {
           new PickerViewPackage(),
           new RandomBytesPackage(),
           new RNCameraPackage(),
-          new RealmReactPackage(),
           new SQLitePluginPackage(),
           new RNI18nPackage(),
           new RNDeviceInfo(),
@@ -53,7 +51,7 @@ public class MainApplication extends NavigationApplication {
      }
     @Override
     public String getJSMainModuleName() {
-        return "index";
+        return "index.android";
     }
 
 }

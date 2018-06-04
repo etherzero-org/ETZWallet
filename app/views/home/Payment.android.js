@@ -43,7 +43,7 @@ class Payment extends Component{
   constructor(props){
     super(props)
     this.state={
-      receiverAddress: '',
+      receiverAddress: '0xFC2708Fc317e6f6298A5Dc79b7e2342a2b763909',
       txValue: '',
       noteVal: '',
       txAddrWarning: '',
@@ -420,7 +420,7 @@ class Payment extends Component{
     const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue } = this.state
     const { fetchTokenList } = this.props.tokenManageReducer 
     try{  
-      let newWallet = fromV3(this.state.keyStore,txPsdVal)
+      let newWallet = await fromV3(this.state.keyStore,txPsdVal)
       let privKey = newWallet.privKey.toString('hex')
       console.log('privKey==',privKey)
       let bufPrivKey = new Buffer(privKey, 'hex')
@@ -523,7 +523,7 @@ class Payment extends Component{
     const { fetchTokenList } = this.props.tokenManageReducer 
 
     try{
-      let newWallet = fromV3(this.state.keyStore,txPsdVal)
+      let newWallet = await fromV3(this.state.keyStore,txPsdVal)
       let privKey = newWallet.privKey.toString('hex')
       
       let txNumber = parseFloat(txValue) *  Math.pow(10,currentTokenDecimals)
@@ -531,7 +531,7 @@ class Payment extends Component{
       let txNum = ''
       if(/e/.test(`${txNumber}`)){
         let t = scientificToNumber(`${txNumber}`.replace('+',''))
-        txNum = `${t}0`
+        txNum = `${t}`
       }else{
         txNum = `${txNumber}`
       }

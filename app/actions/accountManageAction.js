@@ -397,6 +397,23 @@ const modifyPasswordAction = (info) => {
 		})
 	}
 }
+
+const copyKeystoreAction = (addr) => {
+	const onCopy = () => {
+		return{
+			type: types.COPY_KEYSTORE_BACKUP,
+		}
+	}
+	return(dispatch,getState) => {
+		dispatch(onCopy())
+		accountDBOpation.updateBackupKeystore({
+			parames: {
+				addr,
+			}
+		})
+	}
+}
+
 export {
 	switchAccountAction,
 	importAccountAction,
@@ -413,5 +430,6 @@ export {
 	refreshManageBalanceAction,
 	modifyPasswordAction,
 	passPropsAction,
-	genMnemonicAction
+	genMnemonicAction,
+	copyKeystoreAction
 }

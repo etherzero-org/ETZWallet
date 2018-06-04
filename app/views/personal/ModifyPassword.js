@@ -143,9 +143,11 @@ class ModifyPassword extends Component {
 					btnText={I18n.t('modify_psd_btn')}
 					btnMarginTop={scaleSize(60)}
 				/>
-				<View style={[pubS.rowCenter,{alignSelf:'center',marginTop: scaleSize(30)}]} >
-					<Text style={pubS.font26_5}>{I18n.t('password_text')}</Text>
-					<Text onPress={this.importNow} style={pubS.font26_7}>{I18n.t('import_now')}</Text>
+				<View style={[pubS.rowCenter,{alignSelf:'center',justifyContent:'center',marginTop: scaleSize(30),width: scaleSize(680)}]} >
+					<Text style={pubS.font26_5}>{I18n.t('password_text')}
+						<Text onPress={this.importNow} style={pubS.font26_7}>{`    ${I18n.t('import_now')}`}</Text>
+					</Text>
+					
 				</View>
 			</View>
 		)

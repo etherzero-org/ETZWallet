@@ -392,7 +392,7 @@ class Payment extends Component{
     const { fetchTokenList } = this.props.tokenManageReducer 
     try{  
       
-      let newWallet = fromV3(this.state.keyStore,txPsdVal)
+      let newWallet = await fromV3(this.state.keyStore,txPsdVal)
       let privKey = newWallet.privKey.toString('hex')
 
       console.log('privKey==',privKey)
@@ -523,14 +523,14 @@ class Payment extends Component{
 
     try{
       
-      let newWallet = fromV3(this.state.keyStore,txPsdVal)
+      let newWallet = await fromV3(this.state.keyStore,txPsdVal)
       let privKey = newWallet.privKey.toString('hex')
 
       let txNumber = parseFloat(txValue) *  Math.pow(10,currentTokenDecimals)
       let txNum = ''
       if(/e/.test(`${txNumber}`)){
         let t = scientificToNumber(`${txNumber}`.replace('+',''))
-        txNum = `${t}0`
+        txNum = `${t}`
       }else{
         txNum = `${txNumber}`
       }

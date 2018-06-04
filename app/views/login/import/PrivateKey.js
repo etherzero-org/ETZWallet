@@ -33,6 +33,7 @@ class PrivateKey extends Component{
       userNameVal: '',
       userNameWarning: '',
       hintValue: ''
+      
     }
   }
   componentWillMount(){

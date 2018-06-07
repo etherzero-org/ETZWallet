@@ -23,6 +23,7 @@ export default class TextInputComponent extends Component{
     toMore: false,
     coinUnit: '',
     touchable: false,
+    amount: ''
   }
   componentWillMount(){
     this.setState({
@@ -31,7 +32,7 @@ export default class TextInputComponent extends Component{
   }
 
   render(){
-    const { warningText,iptMarginTop,isScan,onPressIptRight,toMore,coinUnit,touchable,onPressTouch, } = this.props
+    const { warningText,iptMarginTop,isScan,onPressIptRight,toMore,coinUnit,touchable,onPressTouch,amount } = this.props
     const { multiline} = this.state
     
     return(
@@ -54,6 +55,13 @@ export default class TextInputComponent extends Component{
             textAlignVertical={multiline ? 'top' : 'center'}
             {...this.props}
           />
+          {
+            amount.length > 0 ? 
+            <View style={pubS.amountViewStyle}>
+              <Text>{amount}</Text>
+            </View>
+            : null
+          }
         {
           toMore ?
           <View style={pubS.arrowViewStyle}>
@@ -82,30 +90,42 @@ export default class TextInputComponent extends Component{
   }
 }
 const styles = StyleSheet.create({
+  amountViewStyle:{
+    // height: scaleSize(43),
+    // marginTop: scaleSize(32),
+
+    // position:'absolute',
+    // right:4,
+    // top:scaleSize(52),
+  },
   textInputView: {
     ...ifIphoneX(
       {
         borderColor:'#DBDFE6',
-        // borderWidth:1,
         alignSelf:'center',
         width: 360,
         backgroundColor: '#fff',
+        flexDirection:'row',
+        justifyContent:'space-between'
       },
       {
         borderColor:'#DBDFE6',
-        // borderWidth:1,
         padding: 0,
         alignSelf:'center',
         width: scaleSize(680),
         backgroundColor: '#fff',
+        flexDirection:'row',
+        justifyContent:'space-between'
       },
       {
         borderColor:'#DBDFE6',
-        // borderWidth:1,
         alignSelf:'center',
         padding: 0,
         width: scaleSize(680),
         backgroundColor: '#fff',
+        flexDirection:'row',
+        justifyContent:'space-between',
+        paddingTop: scaleSize(20)
       }
     )
 

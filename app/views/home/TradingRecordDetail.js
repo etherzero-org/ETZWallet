@@ -49,34 +49,6 @@ class TradingRecordDetail extends Component{
         txDetail: this.props.detailInfo
     })
   }
-  // fromSendPage(){
-  //   const { tx_value, tx_token, tx_sender, tx_receiver, tx_note, tx_hash, tx_block_number, tx_time } = this.props.detailInfo
-  //   console.log('this.props============',this.props.detailInfo)
-
-  //   web3.eth.getTransaction(tx_hash).then((tx) => {
-  //     console.log('tx1111111111111',tx)
-  //     web3.eth.getBlock(tx.blockNumber).then((txBlock) => {
-  //       console.log('txBlock1111111111111',txBlock)
-  //       let block = txBlock.number
-
-  //       let time = txBlock.timestamp
-
-  //       this.setState({
-  //         txDetail:{
-  //           tx_value: tx_value,
-  //           tx_token: tx_token,
-  //           tx_sender: tx_sender,
-  //           tx_receiver: tx_receiver,
-  //           tx_note: tx_note,
-  //           tx_hash: tx_hash,
-  //           tx_block_number: block,
-  //           tx_time: `${time}`,
-  //           tx_result: 1
-  //         }
-  //       })
-  //     })
-  //   })
-  // }
 
   toWebView = (hash) => {
     this.props.navigator.push({

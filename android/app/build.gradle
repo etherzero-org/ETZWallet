@@ -106,8 +106,8 @@ android {
         applicationId "com.openetz"
         minSdkVersion 16
         targetSdkVersion 22
-        versionCode 9
-        versionName "1.0.9"
+        versionCode 10
+        versionName "1.1.0"
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
@@ -129,7 +129,7 @@ android {
 
     signingConfigs {
         release { 
-             storeFile file("F:/rn/OpenETZ/android/app/my-release-key.keystore")
+             storeFile file("F:/OpenETZ/android/app/my-release-key.keystore")
              storePassword "123456"
              keyAlias "my-key-alias"
              keyPassword "123456"

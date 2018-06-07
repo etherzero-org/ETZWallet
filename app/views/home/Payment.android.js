@@ -17,12 +17,11 @@ import {
 
 import { pubS,DetailNavigatorStyle,MainThemeNavColor,ScanNavStyle } from '../../styles/'
 import { setScaleText, scaleSize, ifIphoneX } from '../../utils/adapter'
-import { TextInputComponent,Btn,Loading, } from '../../components/'
+import { TextInputComponent,Btn,Loading, NavHeader} from '../../components/'
 import { connect } from 'react-redux'
 import Modal from 'react-native-modal'
 import Picker from 'react-native-picker'
-import { insert2TradingDBAction } from '../../actions/tradingManageAction'
-import { makeTxByETZAction } from '../../actions/txAction'
+import { makeTxByETZAction, makeTxByTokenAction, insert2TradingDBAction } from '../../actions/tradingManageAction'
 import { refreshTokenAction } from '../../actions/tokenManageAction'
 import { passReceiveAddressAction } from '../../actions/accountManageAction'
 import { contractAbi } from '../../utils/contractAbi'
@@ -30,6 +29,10 @@ import I18n from 'react-native-i18n'
 import { getTokenGas, getGeneralGas } from '../../utils/getGas'
 import { fromV3 } from '../../utils/fromV3'
 import { scientificToNumber,splitDecimal } from '../../utils/splitNumber'
+import {Decimal} from 'decimal.js';
+import {BigNumber} from 'bignumber.js';
+import accountDB from '../../db/account_db'
+
 const EthUtil = require('ethereumjs-util')
 const Wallet = require('ethereumjs-wallet')
 const EthereumTx = require('ethereumjs-tx')
@@ -40,11 +43,31 @@ import Toast from 'react-native-toast'
 import { platform } from 'os';
 
 
+function decipherBuffer(decipher, data) {
+    return Buffer.concat([decipher.update(data), decipher.final()])
+}
+
+
+function lowerJSONKey(jsonObj){  
+    for (var key in jsonObj){  
+        jsonObj[ key.toLowerCase() ]  = jsonObj[key];  
+        delete(jsonObj[key]);  
+    }  
+    return jsonObj;  
+}  
+
+function toLowerCaseKeys(obj) {
+  return Object.keys(obj).reduce(function(accum, key) {
+    accum[key.toLowerCase()] = obj[key];
+    return accum;
+  }, {});
+}
+
 class Payment extends Component{
   constructor(props){
     super(props)
     this.state={
-      receiverAddress: '0xFC2708Fc317e6f6298A5Dc79b7e2342a2b763909',
+      receiverAddress: '',
       txValue: '',
       noteVal: '',
       txAddrWarning: '',
@@ -65,23 +88,14 @@ class Payment extends Component{
       gasValue: '',
       currentAccountName: '',
       currentTokenAddress: '',
+
+      currentAssetValue: '',//当前资产的数量 
     }
     self = this
     this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this))
   }
   
   onNavigatorEvent(event){
-     // if(event.id === 'backPress'){
-
-
-        // if(this.props.receive_address){
-        //   this.props.navigator.popToRoot({
-        //     animated: true, 
-        //     animationType: 'fade'
-        //   })
-        // }
-     // }
-
      switch (event.id) {
       case 'willAppear':
         this.backHandler = BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
@@ -92,7 +106,6 @@ class Payment extends Component{
       default:
         break;
     }
-
   } 
    handleBackPress = () => {
     this.props.navigator.popToRoot({ animated: false });
@@ -100,6 +113,7 @@ class Payment extends Component{
     return true;
   }
   componentWillMount(){
+
     const { fetchTokenList } = this.props.tokenManageReducer 
 
     const { currentAccount } = this.props.accountManageReducer
@@ -157,8 +171,15 @@ class Payment extends Component{
       currentAccountName: currentAccount.account_name
     })
 
+  
+
+   this.assetsValue()
+
+
   }
+  
   componentDidMount(){
+
     this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this._keyboardDidShow)
     this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this._keyboardDidHide)
 
@@ -190,6 +211,11 @@ class Payment extends Component{
           this.setState({
             isToken: true
           })
+          this.selectTokenResult(pickedValue[0])
+        }else{
+          this.setState({
+            currentAssetValue: this.props.tokenManageReducer.etzBalance
+          })
         }
         fetchTokenList.map((val,idx) => {
           if(val.tk_symbol === this.state.currentTokenName){
@@ -214,42 +240,68 @@ class Payment extends Component{
       })
     }
 
-    const { saveRecordSuc } = nextProps.tradingManageReducer
+    const { saveRecordSuc,pendingTxList } = nextProps.tradingManageReducer
 
-    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue } = this.state
+    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue, } = this.state
     const { fetchTokenList,etzBalance } = this.props.tokenManageReducer 
 
-    // if(this.props.tradingManageReducer.saveRecordSuc !== saveRecordSuc && saveRecordSuc){
-    //   //插入数据库成功
-    //   console.log('插入数据库成功')
-    //   this.onPressClose()
-    //   this.props.navigator.push({
-    //     screen: 'tx_record_list',
-    //     title: 'ETZ',
-    //     backButtonTitle:I18n.t('back'),
-    //     backButtonHidden:false,
-    //     navigatorStyle: MainThemeNavColor,
-    //     passProps:{
-    //       etzBalance: splitDecimal(etzBalance),
-    //       etz2rmb: 0,
-    //       curToken: 'ETZ',
-    //       currencySymbol: this.props.currencySymbol,
-    //       curDecimals: 0,
-    //     }
-    //   })
-    //   setTimeout(() => {
-    //     this.props.dispatch(makeTxByETZAction({
-    //       txPsdVal,
-    //       senderAddress,
-    //       txValue,
-    //       receiverAddress,
-    //       noteVal,
-    //       gasValue,
-    //       fetchTokenList,
-    //       keyStore: this.state.keyStore,
-    //     }))
-    //   },500)
-    // }
+    //插入数据库成功 开始发送交易action
+
+    if(this.props.tradingManageReducer.saveRecordSuc !== saveRecordSuc && saveRecordSuc){
+      //插入数据库成功
+      console.log('插入数据库成功')
+      this.onPressClose()
+      this.props.navigator.push({
+        screen: 'tx_record_list',
+        title: this.state.currentTokenName,
+        backButtonTitle:I18n.t('back'),
+        backButtonHidden:false,
+        navigatorStyle: Object.assign({},DetailNavigatorStyle,{
+          navBarHidden: true,
+          navBarTextColor:'#fff',
+          navBarBackgroundColor:'#144396',
+          statusBarColor:'#144396',
+          statusBarTextColorScheme:'light'
+        }),
+        passProps:{
+          etzBalance: this.state.currentAssetValue,//etz或者代币资产金额
+          etz2rmb: 0,
+          curToken: this.state.currentTokenName,//token缩写  etz即ETZ
+          // currencySymbol: this.props.currencySymbol,//  货币符号
+          curDecimals: this.props.curDecimals,//小数点位数
+        }
+      })
+
+      if(this.state.currentTokenName === 'ETZ'){
+        this.props.dispatch(makeTxByETZAction({
+          txPsdVal,
+          senderAddress,
+          txValue,
+          receiverAddress,
+          noteVal,
+          gasValue,
+          fetchTokenList,
+          keyStore: this.state.keyStore,
+          pendingMark: pendingTxList[pendingTxList.length-1]
+        }))
+      }else{
+        this.props.dispatch(makeTxByTokenAction({
+          txPsdVal,
+          senderAddress,
+          txValue,
+          receiverAddress,
+          noteVal,
+          gasValue,
+          fetchTokenList,
+          currentTokenDecimals: this.state.currentTokenDecimals,
+          currentTokenAddress: this.state.currentTokenAddress,
+          currentTokenName: this.state.currentTokenName,
+          keyStore: this.state.keyStore,
+          pendingMark: pendingTxList[pendingTxList.length-1]
+        }))
+      }
+
+    }
   }
 
   componentWillUnmount(){
@@ -267,6 +319,24 @@ class Payment extends Component{
 
   _keyboardDidHide =() => {
 
+  }
+  assetsValue(){
+    if(this.props.curToken === 'ETZ'){
+      this.setState({
+        currentAssetValue: this.props.tokenManageReducer.etzBalance
+      })
+    }else{
+       this.selectTokenResult(this.props.curToken)
+    }
+  }
+  async selectTokenResult(tok){
+    let selTokenRes = await accountDB.selectTable({
+      sql: 'select tk_number from token where tk_symbol = ?',
+      parame: [tok]
+    })
+    this.setState({
+      currentAssetValue: `${selTokenRes[0].tk_number}`
+    })
   }
   onChangeToAddr = (val) => {
     this.setState({
@@ -330,7 +400,7 @@ class Payment extends Component{
 
   }
   onNextStep = () => {
-    const { receiverAddress, txValue, noteVal, } = this.state
+    const { receiverAddress, txValue, noteVal, currentAssetValue} = this.state
     let addressReg = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{42}$/
     if(!addressReg.test(receiverAddress)){
       this.setState({
@@ -338,15 +408,20 @@ class Payment extends Component{
       })
       return
     }else{
-      if(txValue.length === 0){
-        this.setState({
-          txValueWarning: I18n.t('input_send_account')
-        })
+      if(parseFloat(txValue) + 0.01 > parseFloat(currentAssetValue)){
+        Alert.alert(I18n.t('low_than_balence'))
         return
       }else{
-        this.setState({
-          visible: true
-        })
+        if(txValue.length === 0){
+          this.setState({
+            txValueWarning: I18n.t('input_send_account')
+          })
+          return
+        }else{
+          this.setState({
+            visible: true
+          })
+        }
       }
     }    
   }
@@ -447,123 +522,163 @@ class Payment extends Component{
     }
   }
   makeTransact(){
-    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue } = this.state
+    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue,currentTokenName } = this.state
     const { fetchTokenList,etzBalance } = this.props.tokenManageReducer 
       if(!this.state.isToken){
-        // this.props.dispatch(insert2TradingDBAction({
-        //   tx_hash: '',
-        //   tx_value: txValue,
-        //   tx_sender: `0x${senderAddress}`,
-        //   tx_receiver: receiverAddress,
-        //   tx_note: noteVal,
-        //   tx_token: "ETZ",
-        //   tx_result: -1,
-        //   currentAccountName: `0x${senderAddress}`
-        // }))
-        this.makeTransactByETZ()
+        this.props.dispatch(insert2TradingDBAction({
+          tx_hash: '',
+          tx_value: txValue,
+          tx_sender: `0x${senderAddress}`,
+          tx_receiver: receiverAddress,
+          tx_note: noteVal,
+          tx_token: "ETZ",
+          tx_result: -1,
+          currentAccountName: `0x${senderAddress}`,
+          tx_random:  Math.round(Math.random() * 10000)
+        }))
+        // this.makeTransactByETZ(this.state.keyStore)
       }else{
-        this.makeTransactByToken()
+        // this.makeTransactByToken()
+        let tokenRandom = Math.round(Math.random() * 10000)
+
+        self.props.dispatch(insert2TradingDBAction({
+          tx_hash: '',
+          tx_value: txValue,
+          tx_sender: `0x${senderAddress}`,
+          tx_receiver: receiverAddress,
+          tx_note: noteVal,
+          tx_token: currentTokenName,
+          tx_result: -1,
+          currentAccountName: `0x${senderAddress}`,
+          tx_random:  tokenRandom
+        }))
+        self.props.dispatch(insert2TradingDBAction({
+          tx_hash: '',
+          tx_value: '0.00',
+          tx_sender: `0x${senderAddress}`,
+          tx_receiver: receiverAddress,
+          tx_note: noteVal,
+          tx_token: "ETZ",
+          tx_result: -1,
+          currentAccountName: `0x${senderAddress}`,
+          tx_random:  tokenRandom
+        }))
       }
   }
-  async makeTransactByETZ(){
+  async makeTransactByETZ(input){
     const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue } = this.state
     const { fetchTokenList } = this.props.tokenManageReducer 
     try{  
-      let newWallet = await fromV3(this.state.keyStore,txPsdVal)
-      let privKey = newWallet.privKey.toString('hex')
-      console.log('privKey==',privKey)
-      let bufPrivKey = new Buffer(privKey, 'hex')
-      // console.log('bufPrivKey==',bufPrivKey)
-      let nonceNumber = await web3.eth.getTransactionCount(`0x${senderAddress}`)
 
-      console.log('txValue==',txValue)
-      let totalValue = web3.utils.toWei(txValue,'ether')
-      let hex16 = parseInt(totalValue).toString(16)     
-      
-      const txParams = {
-          nonce: `0x${nonceNumber.toString(16)}`,
-          gasPrice: '0x09184e72a000', 
-          gasLimit: `0x${parseFloat(gasValue).toString(16)}`,
-          to: receiverAddress,
-          value: `0x${hex16}`,
-          data: '',
-          chainId: 88
-      }
-      console.log('txParams====',txParams)
-      const tx = new EthereumTx(txParams)
-      tx.sign(bufPrivKey)
-      const serializedTx = tx.serialize()
-      console.log('serializedTx==',serializedTx)
-
-      
-      let hashVal = ''
-      web3.eth.sendSignedTransaction(`0x${serializedTx.toString('hex')}`)
-      .on('transactionHash', function(hash){
-        console.log('hash==',hash)
-        hashVal = hash
-        let passDetailInfo = {
-          tx_value: txValue,                         
-          tx_token: 'ETZ',                               
-          tx_sender: `0x${senderAddress}`,               
-          tx_receiver: receiverAddress,                  
-          tx_note: noteVal,                              
-          tx_hash: hash,                              
-          tx_block_number: 0,                            
-          tx_time: '',  
-          tx_result: 1
-        }
-        self.onPressClose()
-       self.props.navigator.push({                          
-         screen: 'trading_record_detail',                   
-         title:I18n.t('tx_records_1'),                      
-         navigatorStyle: MainThemeNavColor, 
-         passProps: {  
-          detailInfo:passDetailInfo,
-         }                                                  
-       })                                                   
-
-
-      })
-      .on('receipt', function(receipt){
-          console.log('receipt==',receipt)
-          let sendResult = 1
-          if(receipt.status==="0x1" || receipt.status == true){
-              //更新etz数量
-               self.props.dispatch(refreshTokenAction(senderAddress,fetchTokenList))
-               setTimeout(() => {
-                 Alert.alert(I18n.t('send_successful'))
-               },1000)
-           }else{
-             sendResult = 0
-             Alert.alert(I18n.t('send_failure'))
-           }
-          
-
-          self.props.dispatch(insert2TradingDBAction({
-            tx_hash: hashVal,
-            tx_value: txValue,
-            tx_sender: `0x${senderAddress}`,
-            tx_receiver: receiverAddress,
-            tx_note: noteVal,
-            tx_token: "ETZ",
-            tx_result: sendResult,
-            currentAccountName: `0x${senderAddress}`
-          }))
-      })
-      // .on('confirmation', function(confirmationNumber, receipt){ 
         
-      // })
-      .on('error', (error) => {
-        console.log('error==',error)
-        Alert.alert(`${error}`)
-        self.onPressClose()
-        self.props.navigator.pop()
-      })
+        
+
+        
+
+      
     }catch(error){
+      console.log('error2==',error)
       this.onPressClose()
       Alert.alert(error)
     }
   }
+
+  async txETZ(seed){
+    const { senderAddress,txValue,receiverAddress,noteVal,gasValue } = this.state
+    let privKey = seed.toString('hex')
+    console.log('privKey==',privKey)
+    let bufPrivKey = new Buffer(privKey, 'hex')
+
+    let nonceNumber = await web3.eth.getTransactionCount(`0x${senderAddress}`)
+
+    console.log('nonceNumber===',nonceNumber)
+
+    console.log('txValue==',txValue)
+    let totalValue = await web3.utils.toWei(txValue,'ether')
+    let hex16 = parseInt(totalValue).toString(16)     
+    
+    const txParams = {
+        nonce: `0x${nonceNumber.toString(16)}`,
+        gasPrice: '0x09184e72a000', 
+        gasLimit: `0x${parseFloat(gasValue).toString(16)}`,
+        to: receiverAddress,
+        value: `0x${hex16}`,
+        data: '',
+        chainId: 88
+    }
+    console.log('txParams====',txParams)
+    const tx = new EthereumTx(txParams)
+    tx.sign(bufPrivKey)
+    const serializedTx = tx.serialize()
+    console.log('serializedTx==',serializedTx)
+
+    
+    let hashVal = ''
+    web3.eth.sendSignedTransaction(`0x${serializedTx.toString('hex')}`)
+    .on('transactionHash', function(hash){
+      console.log('hash==',hash)
+      hashVal = hash
+      let passDetailInfo = {
+        tx_value: txValue,                         
+        tx_token: 'ETZ',                               
+        tx_sender: `0x${senderAddress}`,               
+        tx_receiver: receiverAddress,                  
+        tx_note: noteVal,                              
+        tx_hash: hash,                              
+        tx_block_number: 0,                            
+        tx_time: '',  
+        tx_result: 1
+      }
+      self.onPressClose()
+     self.props.navigator.push({                          
+       screen: 'trading_record_detail',                   
+       title:I18n.t('tx_records_1'),                      
+       navigatorStyle: MainThemeNavColor, 
+       passProps: {  
+        detailInfo:passDetailInfo,
+       }                                                  
+     })                                                   
+
+
+    })
+    .on('receipt', function(receipt){
+        console.log('receipt==',receipt)
+        let sendResult = 1
+        if(receipt.status==="0x1" || receipt.status == true){
+            //更新etz数量
+             self.props.dispatch(refreshTokenAction(senderAddress,fetchTokenList))
+             setTimeout(() => {
+               Alert.alert(I18n.t('send_successful'))
+             },1000)
+         }else{
+           sendResult = 0
+           Alert.alert(I18n.t('send_failure'))
+         }
+        
+
+        self.props.dispatch(insert2TradingDBAction({
+          tx_hash: hashVal,
+          tx_value: txValue,
+          tx_sender: `0x${senderAddress}`,
+          tx_receiver: receiverAddress,
+          tx_note: noteVal,
+          tx_token: "ETZ",
+          tx_result: sendResult,
+          currentAccountName: `0x${senderAddress}`
+        }))
+    })
+    // .on('confirmation', function(confirmationNumber, receipt){ 
+      
+    // })
+    .on('error', (error) => {
+      console.log('error1==',error)
+      Alert.alert(`${error}`)
+      self.onPressClose()
+      self.props.navigator.pop()
+    })
+
+  }
+
   async makeTransactByToken(){
     
     const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,currentTokenName,currentTokenDecimals,currentTokenAddress,gasValue } = this.state
@@ -712,121 +827,116 @@ class Payment extends Component{
       animationType: 'fade', 
     })
   }
+
   render(){
     const { receiverAddress, txValue, noteVal,visible,modalTitleText,modalTitleIcon,txPsdVal,
             modalSetp1,txAddrWarning,txValueWarning,senderAddress,txPsdWarning,currentTokenName, gasValue } = this.state
     return(
       <View style={pubS.container}>
         <Loading loadingVisible={this.state.loadingVisible} loadingText={this.state.loadingText}/>   
-          <View style={[styles.navbarStyle,pubS.rowCenterJus,{paddingLeft: scaleSize(24),paddingRight: scaleSize(24)}]}>
-          <TouchableOpacity activeOpacity={.6} onPress={this.onPressBack} style={pubS.rowCenter}>
-            <Image source={require('../../images/xhdpi/send_page_back_ios.png')}style={styles.navImgStyle}/>
-          </TouchableOpacity>
-          <View style={{marginLeft: 50}}>
-            <Text style={[pubS.font30_2,{}]}>{I18n.t('send')}</Text>
+        <NavHeader
+          navTitle={I18n.t('send')}
+          pressBack={this.onPressBack}
+          toScan={this.toScan}
+        />
+        <ScrollView ref={'_scroll'}>     
+          <TextInputComponent
+            value ={currentTokenName}
+            editable={false}
+            toMore={true}
+            touchable={true}
+            onPressTouch={this.showTokenPicker}
+          />
+          <TextInputComponent
+            placeholder={I18n.t('receiver_address')}
+            value={receiverAddress}
+            onChangeText={this.onChangeToAddr}
+            warningText={txAddrWarning}
+          />
+          <TextInputComponent
+            placeholder={I18n.t('amount')}
+            value={txValue}
+            onChangeText={this.onChangeTxValue}
+            warningText={txValueWarning}
+            keyboardType={'numeric'}
+            amount={this.state.currentAssetValue}
+          />
+          <TextInputComponent
+            placeholder={I18n.t('note_1')}
+            value={noteVal}
+            onChangeText={this.onChangeNoteText}
+          />
+          <View style={[styles.gasViewStyle,pubS.rowCenterJus]}>
+            <Text style={{color:'#C7CACF',fontSize: setScaleText(26)}}>Gas:</Text>
+            <Text>{gasValue}</Text>
           </View>
-          
-          <TouchableOpacity activeOpacity={.6} onPress={this.toScan} style={styles.drawerStyle}>
-            <Image source={require('../../images/xhdpi/btn_ico_payment_scan_def.png')} style={styles.navImgStyle}/>
-          </TouchableOpacity>
-        </View>  
-          <ScrollView ref={'_scroll'}>     
-            <TextInputComponent
-              value ={currentTokenName}
-              editable={false}
-              toMore={true}
-              touchable={true}
-              onPressTouch={this.showTokenPicker}
-            />
-            <TextInputComponent
-              placeholder={I18n.t('receiver_address')}
-              value={receiverAddress}
-              onChangeText={this.onChangeToAddr}
-              warningText={txAddrWarning}
-            />
-            <TextInputComponent
-              placeholder={I18n.t('amount')}
-              value={txValue}
-              onChangeText={this.onChangeTxValue}
-              warningText={txValueWarning}
-              keyboardType={'numeric'}
-            />
-            <TextInputComponent
-              placeholder={I18n.t('note_1')}
-              value={noteVal}
-              onChangeText={this.onChangeNoteText}
-            />
-            <View style={[styles.gasViewStyle,pubS.rowCenterJus]}>
-              <Text style={{color:'#C7CACF',fontSize: setScaleText(26)}}>Gas:</Text>
-              <Text>{gasValue}</Text>
-            </View>
 
-            <Btn
-              btnMarginTop={scaleSize(60)}
-              btnPress={this.onNextStep}
-              btnText={I18n.t('next')}
-            />
-            <Modal
-              isVisible={visible}
-              onBackButtonPress={this.onPressClose}
-              onBackdropPress={this.onPressClose}
-              style={styles.modalView}
-              backdropOpacity={.8}
-            >
-              <View style={styles.modalView}>
-                <View style={[styles.modalTitle,pubS.center]}>
-                  <TouchableOpacity onPress={this.onPressCloseIcon} activeOpacity={.7} style={styles.modalClose}>
-                    <Image source={modalTitleIcon} style={{height: scaleSize(30),width: scaleSize(30)}}/>
-                  </TouchableOpacity>
-                  <Text style={pubS.font26_4}>{modalTitleText}</Text>
-                </View>
-                {
-                  modalSetp1 ?
-                  <View>
-                    <RowText
-                      rowTitle={I18n.t('order_note')}
-                      rowContent={noteVal}
-                    />
-                    <RowText
-                      rowTitle={I18n.t('to_address')}
-                      rowContent={receiverAddress}
-                    />
-                    <RowText
-                      rowTitle={I18n.t('from_address')}
-                      rowContent={`0x${senderAddress}`}
-                    />
-                    <RowText
-                      rowTitle={I18n.t('amount_1')}
-                      rowContent={txValue}
-                      rowUnit={currentTokenName}
-                    />
-
-                    <Btn
-                      btnPress={this.onPressOrderModalBtn}
-                      btnText={I18n.t('confirm')}
-                      btnMarginTop={scaleSize(50)}
-                    />
-                  </View>
-                  :
-                  <View>
-                    <TextInputComponent
-                      placeholder={I18n.t('password')}
-                      value={txPsdVal}
-                      onChangeText={this.onChangePayPsdText}
-                      warningText={txPsdWarning}
-                      secureTextEntry={true}
-                      autoFocus={true}
-                    />
-                    <Btn
-                      btnPress={this.onPressPayBtn}
-                      btnText={I18n.t('make_send')}
-                      btnMarginTop={scaleSize(50)}
-                    />
-                  </View>
-                }
+          <Btn
+            btnMarginTop={scaleSize(60)}
+            btnPress={this.onNextStep}
+            btnText={I18n.t('next')}
+          />
+          <Modal
+            isVisible={visible}
+            onBackButtonPress={this.onPressClose}
+            onBackdropPress={this.onPressClose}
+            style={styles.modalView}
+            backdropOpacity={.8}
+          >
+            <View style={styles.modalView}>
+              <View style={[styles.modalTitle,pubS.center]}>
+                <TouchableOpacity onPress={this.onPressCloseIcon} activeOpacity={.7} style={styles.modalClose}>
+                  <Image source={modalTitleIcon} style={{height: scaleSize(30),width: scaleSize(30)}}/>
+                </TouchableOpacity>
+                <Text style={pubS.font26_4}>{modalTitleText}</Text>
               </View>
-            </Modal>
-          </ScrollView>         
+              {
+                modalSetp1 ?
+                <View>
+                  <RowText
+                    rowTitle={I18n.t('order_note')}
+                    rowContent={noteVal}
+                  />
+                  <RowText
+                    rowTitle={I18n.t('to_address')}
+                    rowContent={receiverAddress}
+                  />
+                  <RowText
+                    rowTitle={I18n.t('from_address')}
+                    rowContent={`0x${senderAddress}`}
+                  />
+                  <RowText
+                    rowTitle={I18n.t('amount_1')}
+                    rowContent={txValue}
+                    rowUnit={currentTokenName}
+                  />
+
+                  <Btn
+                    btnPress={this.onPressOrderModalBtn}
+                    btnText={I18n.t('confirm')}
+                    btnMarginTop={scaleSize(50)}
+                  />
+                </View>
+                :
+                <View>
+                  <TextInputComponent
+                    placeholder={I18n.t('password')}
+                    value={txPsdVal}
+                    onChangeText={this.onChangePayPsdText}
+                    warningText={txPsdWarning}
+                    secureTextEntry={true}
+                    autoFocus={true}
+                  />
+                  <Btn
+                    btnPress={this.onPressPayBtn}
+                    btnText={I18n.t('make_send')}
+                    btnMarginTop={scaleSize(50)}
+                  />
+                </View>
+              }
+            </View>
+          </Modal>
+        </ScrollView>  
       </View>
     )
   }
@@ -853,22 +963,9 @@ class RowText extends Component{
   }
 }
 const styles = StyleSheet.create({
-  navImgStyle: {
-      width:scaleSize(40),
-      height: scaleSize(40)
-    },
-    drawerStyle:{
-      height: scaleSize(83),
-      width: scaleSize(145),
-      justifyContent:'center',
-      marginRight: scaleSize(10),
-      alignItems:'flex-end',
-    },
-    navbarStyle:{
-      marginTop: scaleSize(30),   
-      height: scaleSize(67),
-      backgroundColor: '#fff',
-    },
+  
+    
+    
     gasViewStyle:{
       ...ifIphoneX(
         {
@@ -952,7 +1049,6 @@ export default connect(
   state => ({
     accountManageReducer: state.accountManageReducer,
     tokenManageReducer: state.tokenManageReducer,
-    txReducer: state.txReducer,
-    tradingManageReducer: state.tradingManageReducer
+    tradingManageReducer: state.tradingManageReducer,
   })
 )(Payment)

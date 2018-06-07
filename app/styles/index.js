@@ -221,7 +221,7 @@ const pubS = {
     alignItems:'flex-end',
     position:'absolute',
     right:4,
-    top:scaleSize(32)
+    top:scaleSize(32),
   },
   rowAlignCenter: {
     flexDirection: 'row',

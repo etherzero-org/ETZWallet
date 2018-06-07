@@ -10,7 +10,7 @@ import {
 
 import { pubS,DetailNavigatorStyle } from '../../../styles/'
 import { setScaleText, scaleSize,ifIphoneX } from '../../../utils/adapter'
-
+import I18n from 'react-native-i18n'
 class RecordListItem extends Component{
   static defaultProps = {
     moneyTextColor: '#657CAB',
@@ -26,10 +26,10 @@ class RecordListItem extends Component{
     let payText = ''
     switch(payStatus){
       case -1:
-        payText = '正在转账'
+        payText = I18n.t('sending')
         break
       case 0:
-        payText = '转账失败'
+        payText = I18n.t('send_failure')
         break
       case 1:
         payText = '转账成功'

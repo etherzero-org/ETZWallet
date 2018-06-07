@@ -75,4 +75,4 @@ async function fromV3(input, password, nonStrict) {
 }
 
 
-export { fromV3,toLowerCaseKeys }
+export { fromV3,toLowerCaseKeys,decipherBuffer, lowerJSONKey }

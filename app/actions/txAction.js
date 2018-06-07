@@ -1,7 +1,6 @@
 import * as types  from '../constants/txConstant'
-import txOpation from '../utils/txOpation'
+import tradingDBOpation from '../utils/tradingDBOpation'
 const makeTxByETZAction = (info) => {
-	console.log('action111')
 	const start = () => {
 		return {
 			type: types.MAKE_TX_BY_ETZ_START,
@@ -28,7 +27,7 @@ const makeTxByETZAction = (info) => {
 	return(dispatch,getState) => {
 		dispatch(start()),
 
-		txOpation.makeTxByETZ({
+		tradingDBOpation.makeTxByETZ({
 			parames: {
 				info
 			},

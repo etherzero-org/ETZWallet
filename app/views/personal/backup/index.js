@@ -262,8 +262,6 @@ class BackUpAccount extends Component{
       })
     },500)
     setTimeout(async () => {
-      console.log('keyStore==',keyStore)
-      console.log('psdVal==',psdVal)
       try {
           const wal = await fromV3(keyStore,psdVal)
           console.log('wal',wal)
@@ -310,7 +308,7 @@ class BackUpAccount extends Component{
         break
     }
   }
-  showPrivModal = () => {
+  showPrivModal = (priv) => {
     setTimeout(() => {
       this.setState({
         privKey: priv,

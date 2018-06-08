@@ -4,7 +4,7 @@ import { Alert } from 'react-native'
 import I18n from 'react-native-i18n'
 import { contractAbi } from './contractAbi'
 import { scientificToNumber } from './splitNumber'
-const scrypt = require('scrypt-async')
+import scrypt from './scrypt-async'
 const sha3 = require('ethereumjs-util').sha3
 const crypto = require('crypto')
 

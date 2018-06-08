@@ -56,10 +56,14 @@ class Receive extends Component{
         visible: true
       })
     }
-    console.log('I18n.currentLoca=====',I18n.currentLocale())
+    // console.log('I18n.currentLoca=====',I18n.currentLocale())
+    let a  =I18n.currentLocale()
+
+    I18n.currentLocale().search(/zh/) === 0 ? a = 'zh' : null
+    
     if(Platform.OS === 'ios'){
-      switch(I18n.currentLocale()){
-        case 'zh-Hans-US':
+      switch(a){
+        case 'zh':
           this.onZh()
           break
         case 'en':

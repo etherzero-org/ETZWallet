@@ -20,7 +20,6 @@ class AmountDatabase  {
     }
 
     createAmountTable(){ 
-        console.log('this.conn===',this.conn)
         this.conn.transaction( tx => {
             tx.executeSql('CREATE TABLE IF NOT EXISTS ACCOUNT(' +  
               'id INTEGER PRIMARY KEY  AUTOINCREMENT,' +  
@@ -78,7 +77,8 @@ class AmountDatabase  {
                   'id INTEGER PRIMARY KEY  AUTOINCREMENT,' +  
                   'tx_token VARCHAR,'+
                   'tx_time VARCHAR,'+  
-                  'tx_result INTEGER,' + //1成功 0失败 -1 正在转账pending
+                  'tx_result INTEGER,' + //1:成功 0:失败 -1:正在转账pending
+                  'tx_random INTEGER,' + //Math.round(Math.random() * 10000) 生成一个随机数  用于tx时插入数据库 判断唯一性
                   'tx_hash VARCHAR,' +  
                   'tx_value VARCHAR,' +    
                   'tx_sender VARCHAR,' + 
@@ -286,11 +286,11 @@ class AmountDatabase  {
 
             return Promise.all(tradingData.map(async (query,idx) => {
                 try {
-                    const { tx_time,tx_token,tx_account_name,tx_result,tx_hash,tx_value,tx_sender,tx_receiver,tx_note,tx_block_number } = query
+                    const { tx_time,tx_token,tx_account_name,tx_result,tx_random,tx_hash,tx_value,tx_sender,tx_receiver,tx_note,tx_block_number } = query
 
-                    let sql = "INSERT INTO trading(tx_time,tx_token,tx_account_name,tx_result,tx_hash,tx_value,tx_sender,tx_receiver,tx_note,tx_block_number) values(?,?,?,?,?,?,?,?,?,?)";  
+                    let sql = "INSERT INTO trading(tx_time,tx_token,tx_account_name,tx_result,tx_random,tx_hash,tx_value,tx_sender,tx_receiver,tx_note,tx_block_number) values(?,?,?,?,?,?,?,?,?,?,?)";  
                     
-                    await tx.executeSql(sql,[tx_time,tx_token,tx_account_name,tx_result,tx_hash,tx_value,tx_sender,tx_receiver,tx_note,tx_block_number])
+                    await tx.executeSql(sql,[tx_time,tx_token,tx_account_name,tx_result,tx_random,tx_hash,tx_value,tx_sender,tx_receiver,tx_note,tx_block_number])
 
                     insertTradingSuccess = true
 

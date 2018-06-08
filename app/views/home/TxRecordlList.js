@@ -8,7 +8,8 @@ import {
   FlatList,
   Platform,
   ScrollView,
-  BackHandler
+  BackHandler,
+  RefreshControl
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle,MainThemeNavColor } from '../../styles/'
@@ -19,86 +20,95 @@ import { Navigation } from 'react-native-navigation'
 import I18n from 'react-native-i18n'
 import { connect } from 'react-redux'
 import accountDB from '../../db/account_db'
-import {Loading } from '../../components/'
+import {Loading,NavHeader } from '../../components/'
 class TxRecordlList extends Component{
   constructor(props){
     super(props)
     this.state = {
       recordList: [],
-      loadingVisible: true
+      loadingVisible: false,
     }
-     // this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this))
+     this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this))
   }
 
   componentWillMount(){
+    this.setState({
+      loadingVisible: true
+    })
     this.getRecordList()  
      
   }
 
 
   componentWillReceiveProps(nextProps){
-    const { txEtzStatus,txEtzHash } = nextProps.txReducer
+    const { txEtzStatus,txEtzHash, txErrorMsg,txErrorOrder,txStateMark } = nextProps.tradingManageReducer
+    if(this.props.tradingManageReducer.txEtzStatus !== txEtzStatus){
+      if(txEtzStatus === 1){
 
-    if(this.props.txReducer.txEtzStatus !== txEtzStatus){
-        this.setState({
-          loadingVisible: true,
-        })
-        if(!!txEtzStatus){
-          //执行一条update语句  更新
-          this.updatePending(1,txEtzHash)
-        }else{
-          this.updatePending(0,txEtzHash)
-        }
-        
+          //更新轉賬狀態
+         // this.getRecordList()
+
+         return
+       }else if(txEtzStatus === 0){
+          // this.getRecordList()
+          // if(txErrorOrder === 1){
+          //   this.updatePending(0,txEtzHash,txStateMark)
+          // }else if(txErrorOrder === 0){
+          //   this.deletePending(txStateMark)
+          // }
+          return
+       }
     }
+
+
+
   }
 
-  // onNavigatorEvent(event) {
-  //   switch (event.id) {
-  //     case 'willAppear':
-  //       this.backHandler = BackHandler.addEventListener('hardwareBackPress', this.handleBackPress)
-  //       break;
-  //     case 'willDisappear':
-  //       this.backHandler.remove()
-  //       break;
-  //     default:
-  //       break;
+  onNavigatorEvent(event){
+     switch (event.id) {
+      case 'willAppear':
+        this.backHandler = BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
+        break;
+      case 'willDisappear':
+        this.backHandler.remove();
+        break;
+      default:
+        break;
+    }
+  } 
+  handleBackPress = () => {
+    this.props.navigator.popToRoot({ animated: false });
+    return true;
+  }
+
+  // async updatePending(status,hash){
+
+  //   let tx = await web3.eth.getTransaction(hash)
+  //   let txBlock  = await web3.eth.getBlock(tx.blockNumber)
+  //    console.log('更新hash值',txBlock)
+  //   let block = txBlock.number
+  //   let time = txBlock.timestamp
+
+
+  //   let updateRes = await accountDB.updateTable({
+  //     sql: 'update trading set tx_result = ?,tx_time = ?,tx_hash = ?,tx_block_number = ? where tx_result = -1 ',
+  //     parame: [status,time,hash,block]
+  //   })
+  //   if(updateRes === 'success'){
+  //     console.log('updatePending成功')
+  //     this.getRecordList()
+  //   }else{
+  //     if(updateRes === 'fail'){
+  //        console.log('updatePending失败')
+  //       this.getRecordList()
+  //     }
   //   }
 
-  // }
-  // handleBackPress = () => {
-  //   console.log('返回1111111')
-  //   this.props.navigator.popToRoot({ animated: false })
-  // }
-
-  async updatePending(status,hash){
-
-    let tx = await web3.eth.getTransaction(hash)
-    let txBlock  = await web3.eth.getBlock(tx.blockNumber)
-     console.log('更新hash值',txBlock)
-    let block = txBlock.number
-    let time = txBlock.timestamp
-
-
-    let updateRes = await accountDB.updateTable({
-      sql: 'update trading set tx_result = ?,tx_time = ?,tx_hash = ?,tx_block_number = ? where tx_result = -1 ',
-      parame: [status,time,hash,block]
-    })
-    if(updateRes === 'success'){
-      console.log('updatePending成功')
-      this.getRecordList()
-    }else{
-      if(updateRes === 'fail'){
-         console.log('updatePending失败')
-        this.getRecordList()
-      }
-    }
-
     
-  }
+  // }
 
   async getRecordList(){
-    const { currentAccount, globalAccountsList } = this.props.accountManageReducer
+    const { currentAccount } = this.props.accountManageReducer
     //根据当前账户(0x${currentAccount.address} = tx_sender)地址查找 交易记录
     //token name
     let selRes = await accountDB.selectTable({
@@ -183,7 +193,8 @@ class TxRecordlList extends Component{
       }),
       passProps:{
         curToken: this.props.curToken,
-        curDecimals:this.props.curDecimals
+        curDecimals:this.props.curDecimals,
+        // currencySymbol: this.state.currencySymbol,
       }
     })
   }
@@ -203,21 +214,57 @@ class TxRecordlList extends Component{
       </View>
     )
   }
+
+  // onRefreshList = () => {
+  //   this.setState({
+  //     loadingVisible: true
+  //   })
+
+  //   //下拉更新列表 及本列表下的资产总额
+  //   this.getRecordList()
+  //   // this.props.dispatch()
+  // }
+
+  onPressBack = () => {
+    this.props.navigator.popToRoot({
+      animated: true, 
+      animationType: 'fade', 
+    })
+  }
   render(){
     console.log('交易列表',this.state.recordList)
     return(
       <View style={[styles.container,{backgroundColor:'#F5F7FB'}]}>
-        <Loading loadingVisible={false} loadingText={I18n.t('loading')}/>   
-        <View style={{marginBottom: scaleSize(96)}}> 
-          <ScrollView>
-            <FlatList
-              data={this.state.recordList}
-              renderItem={this.renderItem}
-              keyExtractor = {(item, index) => index}
-              ListHeaderComponent={this.ListHeaderComponent}
-              ListEmptyComponent={this.ListEmptyComponent}
-            />
-          </ScrollView>
+        {
+        // <Loading loadingVisible={false} loadingText={I18n.t('loading')}/>   
+          
+        }
+        <NavHeader
+          navTitleColor={'#fff'}
+          navBgColor={'#144396'}
+          isAccount={false}
+          navTitle={this.props.curToken}
+          pressBack={this.onPressBack}
+        />
+        <View style={{marginBottom: scaleSize(146)}}> 
+          <FlatList
+            keyExtractor={(item, index) => index.toString()}
+            data={this.state.recordList}
+            renderItem={this.renderItem}
+            ListHeaderComponent={this.ListHeaderComponent}
+            ListEmptyComponent={this.ListEmptyComponent}
+            // refreshControl={
+            //   <RefreshControl
+            //     refreshing={this.state.loadingVisible}
+            //     onRefresh={this.onRefreshList}
+            //     tintColor={"#144396"}
+            //     title={I18n.t('loading')}
+            //     colors={['#fff']}
+            //     progressBackgroundColor={"#1d53a6"}
+            //   />
+            // }
+          />          
+
         </View>
         <View style={[styles.bottomBtnStyle,pubS.rowCenter]}>
           <TouchableOpacity activeOpacity={.7} onPress={this.payBtn} style={[styles.btnStyle,{backgroundColor:'#ffa93b'},pubS.center]}>
@@ -282,10 +329,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#144396',
   },
 })
+
 export default connect(
   state => ({
-    tradingManageReducer: state.tradingManageReducer,
     accountManageReducer: state.accountManageReducer,
-    txReducer: state.txReducer,
+    tradingManageReducer: state.tradingManageReducer
   })
 )(TxRecordlList)
+

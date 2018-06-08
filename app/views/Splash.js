@@ -30,6 +30,7 @@ class Splash extends Component{
   
   componentWillMount(){
     // this.onDelete()
+    // this.onDrop3()
     // this.onDrop1()
     // this.onDrop2()
 
@@ -59,7 +60,12 @@ class Splash extends Component{
       sql: 'drop table account'
     })
   }
-
+  onDrop3 = () => {
+    accountDB.dropTable({
+      sql: 'drop table trading'
+    })
+  }
+  
   componentDidMount(){
     this.getAccounts()
   } 

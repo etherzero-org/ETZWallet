@@ -16,7 +16,7 @@ import {
 
 import { pubS,DetailNavigatorStyle,MainThemeNavColor,ScanNavStyle } from '../../styles/'
 import { setScaleText, scaleSize, ifIphoneX } from '../../utils/adapter'
-import { TextInputComponent,Btn,Loading, } from '../../components/'
+import { TextInputComponent,Btn,Loading,NavHeader } from '../../components/'
 import { connect } from 'react-redux'
 import Modal from 'react-native-modal'
 import Picker from 'react-native-picker'
@@ -708,19 +708,12 @@ class Payment extends Component{
 
         <Loading loadingVisible={loadingVisible} loadingText={this.state.loadingText}/>  
 
-        <View style={[styles.navbarStyle,pubS.rowCenterJus,{paddingLeft: scaleSize(24),paddingRight: scaleSize(24)}]}>
-          <TouchableOpacity activeOpacity={.6} onPress={this.onPressBack} style={pubS.rowCenter}>
-            <Image source={require('../../images/xhdpi/nav_ico_createaccount_back_def.png')}style={styles.navImgStyle}/>
-            <Text style={{color:'#c4c7cc',fontSize:18}}>{I18n.t('back')}</Text>
-          </TouchableOpacity>
-          <View style={{marginLeft: 18}}>
-            <Text style={[pubS.font30_2,{}]}>{I18n.t('send')}</Text>
-          </View>
-          
-          <TouchableOpacity activeOpacity={.6} onPress={this.toScan} style={styles.drawerStyle}>
-            <Image source={require('../../images/xhdpi/btn_ico_payment_scan_def.png')} style={styles.navImgStyle}/>
-          </TouchableOpacity>
-        </View>
+        
+        <NavHeader
+          navTitle={I18n.t('send')}
+          pressBack={this.onPressBack}
+          toScan={this.toScan}
+        />
           <InputScrollView>
         
           <TextInputComponent
@@ -851,29 +844,7 @@ class RowText extends Component{
   }
 }
 const styles = StyleSheet.create({
-    navImgStyle: {
-      width:scaleSize(40),
-      height: scaleSize(40)
-    },
-    drawerStyle:{
-      // borderColor:'#fff',
-      // borderWidth:1,
-      height: scaleSize(83),
-      width: scaleSize(145),
-      justifyContent:'center',
-      marginRight: scaleSize(10),
-      // position:"absolute",
-      // top: 0,
-      // right:scaleSize(24),
-      alignItems:'flex-end',
-      // justifyContent:'center'
-    },
-    navbarStyle:{
-      marginTop: scaleSize(30),   
-      height: scaleSize(87),
-      backgroundColor: '#fff',
-      // backgroundColor:'#000'
-    },
+    
     gasViewStyle:{
       ...ifIphoneX(
         {

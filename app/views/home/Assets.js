@@ -27,8 +27,7 @@ import { splitDecimal, scientificToNumber} from '../../utils/splitNumber'
 import {Scan} from '../../components/'
 
 import { insertToTokenAction,initSelectedListAction,refreshTokenAction,fetchTokenAction } from '../../actions/tokenManageAction'
-import { insert2TradingDBAction } from '../../actions/tradingManageAction'
-import { resetTxStatusAction } from '../../actions/txAction'
+import { insert2TradingDBAction,resetTxStatusAction } from '../../actions/tradingManageAction'
 import I18n from 'react-native-i18n'
 import Toast from 'react-native-toast'
 
@@ -220,48 +219,59 @@ class Assets extends Component{
 
     //交易状态
 
-    const { txEtzStatus,txEtzHash, txErrorMsg,txErrorOrder } = nextProps.txReducer
-    if(this.props.txReducer.txEtzStatus !== txEtzStatus){
-      let sendResult = 1
+    const { txEtzStatus,txEtzHash, txErrorMsg,txErrorOrder,txStateMark } = nextProps.tradingManageReducer
+    if(this.props.tradingManageReducer.txEtzStatus !== txEtzStatus){
       if(txEtzStatus === 1){
          this.props.dispatch(refreshTokenAction(this.state.curAddr,fetchTokenList))
           //更新轉賬狀態
-         this.updatePending(1,txEtzHash)
          Alert.alert(I18n.t('send_successful'))
-       }else{
-         sendResult = 0
-          if(!!txErrorOrder){
-            this.updatePending(0,txEtzHash)
-          }else{
-            this.deletePending()
-          }
-         Alert.alert(txErrorMsg)
+         this.updatePending(1,txEtzHash,txStateMark)
          return
+       }else if(txEtzStatus === 0){
+          console.log('txEtzStatus',txEtzStatus)
+          console.log('txErrorOrder',txErrorOrder)
+          console.log('txEtzHash',txEtzHash)
+          Alert.alert(txErrorMsg)
+          if(txErrorOrder === 1){
+            this.updatePending(0,txEtzHash,txStateMark)
+          }else if(txErrorOrder === 0){
+            this.deletePending(txStateMark)
+          }
+          return
        }
       this.props.dispatch(resetTxStatusAction())
     }
   }
 
-  async deletePending(){
+  async deletePending(mark){
+    console.log('删除这条记录的mark',mark)
     let delRes = await accountDB.deleteAccount({
-      sql: 'delete from trading where tx_result = -1',
-      d_id: [],
+      sql: 'delete from trading where tx_random =  ?',
+      d_id: [mark],
     })
+    console.log('删除结果',delRes)
+
   }
 
-  async updatePending(status,hash){
+  async updatePending(status,hash,mark){
+    console.log('updatePending   status',status)
+    console.log('updatePending   mark 6666',mark)
+    let block = '',
+        time = '';
 
-    let tx = await web3.eth.getTransaction(hash)
-    let txBlock  = await web3.eth.getBlock(tx.blockNumber)
-     console.log('更新hash值',txBlock)
-    let block = txBlock.number
-    let time = txBlock.timestamp
-
-
+    if(hash.length === 66){
+      let tx = await web3.eth.getTransaction(hash)
+      let txBlock  = await web3.eth.getBlock(tx.blockNumber)
+      block = txBlock.number
+      time = txBlock.timestamp
+    }else{
+      time =  `${Date.parse(new Date())/1000}`
+    }
     let updateRes = await accountDB.updateTable({
-      sql: 'update trading set tx_result = ?,tx_time = ?,tx_hash = ?,tx_block_number = ? where tx_result = -1 ',
-      parame: [status,time,hash,block]
+      sql: 'update trading set tx_result = ?,tx_time = ?,tx_hash = ?,tx_block_number = ? where tx_random = ? ',
+      parame: [status,time,hash,block,mark]
     })
+
     if(updateRes === 'success'){
       console.log('updatePending成功')
 
@@ -291,7 +301,14 @@ class Assets extends Component{
       title,
       backButtonTitle:I18n.t('back'),
       backButtonHidden:false,
-      navigatorStyle: MainThemeNavColor,
+      // navigatorStyle: MainThemeNavColor,
+      navigatorStyle: Object.assign({},DetailNavigatorStyle,{
+          navBarHidden: true,
+          // navBarTextColor:'#fff',
+          // navBarBackgroundColor:'#144396',
+          statusBarColor:'#144396',
+          statusBarTextColorScheme:'light'
+      }),
       passProps:{
         etzBalance: balance,
         etz2rmb: 0,
@@ -332,6 +349,7 @@ class Assets extends Component{
       passProps:{
         curToken: 'ETZ',
         currencySymbol: this.state.currencySymbol,
+        curDecimals: 0
       }
     })
   }
@@ -763,6 +781,6 @@ export default connect(
   state => ({
     accountManageReducer: state.accountManageReducer,
     tokenManageReducer: state.tokenManageReducer,
-    txReducer: state.txReducer
+    tradingManageReducer: state.tradingManageReducer
   })
 )(Assets)

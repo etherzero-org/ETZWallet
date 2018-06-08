@@ -45,15 +45,7 @@ const txETZStart = (state,action) => {
     txEtzHash: ''
   }
 }
-// const txHash = (state,action) => {
 
-//   const {data} = action.payload
-//   console.log('action.payload.data2222222222222=====',data)
-//   return {
-//     ...state,
-//     txEtzHash: data
-//   }
-// }
 const txETZSuc = (state,action) => {
   const { sucdata } = action.payload
   return {

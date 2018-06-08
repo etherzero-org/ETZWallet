@@ -35,7 +35,7 @@ class RecordCollection extends Component{
         <FlatList
           data={DATA}
           renderItem={this.renderColl}
-          keyExtractor = {(item, index) => index}
+          keyExtractor={(item, index) => index.toString()}
         />
       </View>
     )

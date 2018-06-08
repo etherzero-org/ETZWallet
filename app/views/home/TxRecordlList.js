@@ -9,7 +9,8 @@ import {
   Platform,
   ScrollView,
   BackHandler,
-  RefreshControl
+  RefreshControl,
+  StatusBar
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle,MainThemeNavColor } from '../../styles/'
@@ -20,7 +21,14 @@ import { Navigation } from 'react-native-navigation'
 import I18n from 'react-native-i18n'
 import { connect } from 'react-redux'
 import accountDB from '../../db/account_db'
-import {Loading,NavHeader } from '../../components/'
+import {Loading,NavHeader,LoadingModal } from '../../components/'
+
+const MyStatusBar = ({backgroundColor, ...props}) => (
+  <View style={[styles.statusBar, { backgroundColor }]}>
+    <StatusBar translucent backgroundColor={backgroundColor} {...props} />
+  </View>
+);
+
 class TxRecordlList extends Component{
   constructor(props){
     super(props)
@@ -32,6 +40,7 @@ class TxRecordlList extends Component{
   }
 
   componentWillMount(){
+    StatusBar.setBarStyle('light-content',true)
     this.setState({
       loadingVisible: true
     })
@@ -41,27 +50,9 @@ class TxRecordlList extends Component{
 
 
   componentWillReceiveProps(nextProps){
-    const { txEtzStatus,txEtzHash, txErrorMsg,txErrorOrder,txStateMark } = nextProps.tradingManageReducer
-    if(this.props.tradingManageReducer.txEtzStatus !== txEtzStatus){
-      if(txEtzStatus === 1){
-
-          //更新轉賬狀態
-         // this.getRecordList()
-
-         return
-       }else if(txEtzStatus === 0){
-          // this.getRecordList()
-          // if(txErrorOrder === 1){
-          //   this.updatePending(0,txEtzHash,txStateMark)
-          // }else if(txErrorOrder === 0){
-          //   this.deletePending(txStateMark)
-          // }
-          return
-       }
+    if(this.props.tradingManageReducer.txSuccessUpdate !== nextProps.tradingManageReducer.txSuccessUpdate && nextProps.tradingManageReducer.txSuccessUpdate){
+      this.getRecordList()
     }
-
-
-
   }
 
   onNavigatorEvent(event){
@@ -115,7 +106,7 @@ class TxRecordlList extends Component{
       sql: 'select * from trading where tx_sender = ? and tx_token = ? ORDER BY id DESC',//按id降序排列
       parame: [`0x${currentAccount.address}`,this.props.curToken]
     })
-
+    // console.log('selRes 3333333333',selRes)
     this.setState({
       recordList: selRes,
       loadingVisible: false
@@ -235,16 +226,18 @@ class TxRecordlList extends Component{
     console.log('交易列表',this.state.recordList)
     return(
       <View style={[styles.container,{backgroundColor:'#F5F7FB'}]}>
+        <LoadingModal />
         {
         // <Loading loadingVisible={false} loadingText={I18n.t('loading')}/>   
-          
         }
+        <MyStatusBar backgroundColor="#144396" barStyle="light-content" />
         <NavHeader
           navTitleColor={'#fff'}
           navBgColor={'#144396'}
           isAccount={false}
           navTitle={this.props.curToken}
           pressBack={this.onPressBack}
+          marginTopValue={0}
         />
         <View style={{marginBottom: scaleSize(146)}}> 
           <FlatList
@@ -279,6 +272,9 @@ class TxRecordlList extends Component{
   }
 }
 
+const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const APPBAR_HEIGHT = Platform.OS === 'ios' ? 44 : 56;
+
 const styles = StyleSheet.create({
   container: {
     ...ifIphoneX(
@@ -296,6 +292,9 @@ const styles = StyleSheet.create({
       }
     )
 
+  },
+  statusBar: {
+    height: STATUSBAR_HEIGHT,
   },
   btnStyle:{
     width: '50%',

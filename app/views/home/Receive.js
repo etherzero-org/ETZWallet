@@ -20,7 +20,7 @@ import { connect } from 'react-redux'
 import I18n, { getLanguages } from 'react-native-i18n'
 import { changeBackupModalTimesAction } from '../../actions/accountManageAction'
 const wallet = require('ethereumjs-wallet')
-import Toast from 'react-native-toast'
+import Toast from 'react-native-root-toast'
 class Receive extends Component{
   constructor(props){
     super(props)
@@ -143,7 +143,10 @@ class Receive extends Component{
   }
   onPressCopyBtn = () => {
       Clipboard.setString(this.state.addressText)
-      Toast.showLongBottom(I18n.t('copy_successfully'))
+      let t = Toast.show(I18n.t('copy_successfully'))
+      setTimeout(() => {
+        Toast.hide(t)
+      },1000)
   }
 
   onHide = () => {

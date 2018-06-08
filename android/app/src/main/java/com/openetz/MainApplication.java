@@ -19,7 +19,6 @@ import com.bitgo.randombytes.RandomBytesPackage;
 import org.reactnative.camera.RNCameraPackage;
 import org.pgsqlite.SQLitePluginPackage;
 import com.AlexanderZaytsev.RNI18n.RNI18nPackage;
-import com.remobile.toast.RCTToastPackage; 
 import com.learnium.RNDeviceInfo.RNDeviceInfo;
 public class MainApplication extends NavigationApplication {
 
@@ -36,7 +35,6 @@ public class MainApplication extends NavigationApplication {
           new SQLitePluginPackage(),
           new RNI18nPackage(),
           new RNDeviceInfo(),
-          new RCTToastPackage()
         );
     }
 

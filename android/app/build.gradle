@@ -173,7 +173,6 @@ dependencies {
     compile project(':react-native-camera')
     compile project(':react-native-sqlite-storage')
     compile project(':react-native-i18n')
-    compile project(':react-native-toast')
     compile project(':react-native-device-info')
 }
 

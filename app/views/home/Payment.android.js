@@ -28,7 +28,7 @@ import { contractAbi } from '../../utils/contractAbi'
 import I18n from 'react-native-i18n'
 import { getTokenGas, getGeneralGas } from '../../utils/getGas'
 import { fromV3 } from '../../utils/fromV3'
-import { scientificToNumber,splitDecimal } from '../../utils/splitNumber'
+import { splitDecimal } from '../../utils/splitNumber'
 import {Decimal} from 'decimal.js';
 import {BigNumber} from 'bignumber.js';
 import accountDB from '../../db/account_db'
@@ -39,7 +39,6 @@ const EthereumTx = require('ethereumjs-tx')
 
 let self = null
 
-import Toast from 'react-native-toast'
 import { platform } from 'os';
 
 
@@ -264,7 +263,7 @@ class Payment extends Component{
           statusBarTextColorScheme:'light'
         }),
         passProps:{
-          etzBalance: this.state.currentAssetValue,//etz或者代币资产金额
+          etzBalance: splitDecimal(this.state.currentAssetValue),//etz或者代币资产金额
           etz2rmb: 0,
           curToken: this.state.currentTokenName,//token缩写  etz即ETZ
           // currencySymbol: this.props.currencySymbol,//  货币符号
@@ -541,7 +540,7 @@ class Payment extends Component{
         // this.makeTransactByToken()
         let tokenRandom = Math.round(Math.random() * 10000)
 
-        self.props.dispatch(insert2TradingDBAction({
+        this.props.dispatch(insert2TradingDBAction({
           tx_hash: '',
           tx_value: txValue,
           tx_sender: `0x${senderAddress}`,
@@ -552,7 +551,7 @@ class Payment extends Component{
           currentAccountName: `0x${senderAddress}`,
           tx_random:  tokenRandom
         }))
-        self.props.dispatch(insert2TradingDBAction({
+        this.props.dispatch(insert2TradingDBAction({
           tx_hash: '',
           tx_value: '0.00',
           tx_sender: `0x${senderAddress}`,
@@ -859,7 +858,7 @@ class Payment extends Component{
             onChangeText={this.onChangeTxValue}
             warningText={txValueWarning}
             keyboardType={'numeric'}
-            amount={this.state.currentAssetValue}
+            amount={splitDecimal(this.state.currentAssetValue)}
           />
           <TextInputComponent
             placeholder={I18n.t('note_1')}

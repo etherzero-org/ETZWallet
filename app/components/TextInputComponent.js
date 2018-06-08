@@ -42,7 +42,7 @@ export default class TextInputComponent extends Component{
         >
           <View 
             pointerEvents={touchable ? 'none' : 'auto'}
-            style={[styles.textInputView,{borderBottomWidth: Platform.OS === 'ios' ? StyleSheet.hairlineWidth : 0, marginTop: iptMarginTop,height: multiline ? scaleSize(190) :scaleSize(99)}]}
+            style={[styles.textInputView,{ alignItems:amount.length > 0 ? 'center': null,borderBottomWidth: Platform.OS === 'ios' ? StyleSheet.hairlineWidth : 0, marginTop: iptMarginTop,height: multiline ? scaleSize(190) :scaleSize(99)}]}
           >
             
           
@@ -57,9 +57,7 @@ export default class TextInputComponent extends Component{
           />
           {
             amount.length > 0 ? 
-            <View style={pubS.amountViewStyle}>
               <Text>{amount}</Text>
-            </View>
             : null
           }
         {
@@ -115,7 +113,9 @@ const styles = StyleSheet.create({
         width: scaleSize(680),
         backgroundColor: '#fff',
         flexDirection:'row',
-        justifyContent:'space-between'
+        justifyContent:'space-between',
+        // borderWidth:1,
+        // borderColor:'red',
       },
       {
         borderColor:'#DBDFE6',
@@ -125,7 +125,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         flexDirection:'row',
         justifyContent:'space-between',
-        paddingTop: scaleSize(20)
+        paddingTop: scaleSize(20),
+        // borderWidth:1,
+        // borderColor:'red',
       }
     )
 

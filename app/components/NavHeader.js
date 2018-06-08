@@ -14,13 +14,14 @@ export default class NavHeader extends Component {
 	static defaultProps = {
 		navBgColor: '#fff',
 		isAccount: true,
-		navTitleColor: '#657CAB'
+		navTitleColor: '#657CAB',
+		marginTopValue: scaleSize(30)
 	} 
 
 	render(){
-		const { navTitle, pressBack, navBgColor, isAccount, toScan,navTitleColor} = this.props
+		const { navTitle, pressBack, navBgColor, isAccount, toScan,navTitleColor, marginTopValue} = this.props
 		return(
-			<View style={[Platform.OS === 'ios' ? styles.ios_navbarStyle : styles.navbarStyle,pubS.rowCenterJus,{backgroundColor: navBgColor}]}>
+			<View style={[Platform.OS === 'ios' ? styles.ios_navbarStyle : styles.navbarStyle,pubS.rowCenterJus,{paddingLeft: scaleSize(15),paddingRight: scaleSize(15),backgroundColor: navBgColor,marginTop: marginTopValue}]}>
 	            <TouchableOpacity activeOpacity={.6} onPress={pressBack} style={pubS.rowCenter}>
 	              <Image source={require('../images/xhdpi/send_page_back_ios.png')}style={styles.navImgStyle}/>
 	            </TouchableOpacity>
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
     },
 
     ios_navbarStyle:{
-      marginTop: scaleSize(30),   
+      // marginTop: scaleSize(30),   
       height: scaleSize(87),
       backgroundColor: '#fff',
       // backgroundColor:'#000'

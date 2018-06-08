@@ -47,7 +47,7 @@ class RecordPay extends Component{
         <FlatList
           data={this.props.list}
           renderItem={this.renderPay}
-          keyExtractor = {(item, index) => index}
+          keyExtractor={(item, index) => index.toString()}
           ListEmptyComponent={this.ListEmptyComponent}
         />
       </View>

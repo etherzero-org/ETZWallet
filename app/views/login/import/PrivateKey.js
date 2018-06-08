@@ -19,7 +19,6 @@ import { importAccountAction,resetDeleteStatusAction,showImportLoadingAction } f
 import { connect } from 'react-redux'
 import { Navigation } from 'react-native-navigation'
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
 class PrivateKey extends Component{
   constructor(props){
     super(props)
@@ -30,7 +29,7 @@ class PrivateKey extends Component{
       privKeyWarning: '',
       psdWarning: '',
       rePsdWarning: '',
-      userNameVal: '222',
+      userNameVal: '',
       userNameWarning: '',
       hintValue: ''
       

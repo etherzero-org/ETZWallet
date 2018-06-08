@@ -117,10 +117,10 @@ async function onMakeTxByETZ(options) {
 	      console.log('input===',input)
 	      var json = (typeof input === 'object') ? input : JSON.parse(nonStrict ? input : input)
 
-	      if (json.version !== 3) {
-	          throw 'Not a V3 wallet'
-	          return
-	      }
+	      // if (json.version !== 3) {
+	      //     throw 'Not a V3 wallet'
+	      //     return
+	      // }
 	      var kdfparams = json.crypto.kdfparams
 	      
 	      console.log('kdfparams==',kdfparams)
@@ -138,8 +138,6 @@ async function onMakeTxByETZ(options) {
 		      let buf = Buffer.concat([new Buffer(derivedKey,'hex').slice(16,32), ciphertextBuf])
 		      let mac = sha3(buf)
 		      let a = mac.toString('hex')
-		      console.log('mac.toString()===',a)
-		      console.log('json.crypto.mac=====',json.crypto.mac)
 		      if (mac.toString('hex') !== json.crypto.mac) {
 		          // Alert.alert(I18n.t('password_is_wrong')) 
 		          txETZFail('',I18n.t('password_is_wrong'),0,pendingMark)
@@ -179,14 +177,6 @@ async function txTokenFunc(options) {
       
     let txNumber = parseFloat(txValue) *  Math.pow(10,currentTokenDecimals)
       
-    // let txNum = ''
-    // if(/e/.test(`${txNumber}`)){
-    //   let t = scientificToNumber(`${txNumber}`.replace('+',''))
-    //   txNum = `${t}`
-    // }else{
-    //   txNum = `${txNumber}`
-    // }
-    // console.log('txNum==',txNum)
       
     let hex16 = parseFloat(txNumber).toString(16)      
  
@@ -236,7 +226,9 @@ async function txTokenFunc(options) {
             }
         }).on('error', (error) => {
            console.log('代币交易失败111',error)
-           return txTokenFuncFail('',`${error}`,1,pendingMark)
+           console.log('hash11111',hashVal)
+           let h = hashVal.length > 0 ? hashVal : ''
+           return txTokenFuncFail(h,`${error}`,1,pendingMark)
         })
     })
 }
@@ -244,16 +236,16 @@ async function txTokenFunc(options) {
 async function onMakeTxByToken(options) {
 	const { parames, txTokenSuccess, txTokenFail, } = options
 	const { txPsdVal, senderAddress, txValue, receiverAddress, noteVal, gasValue, fetchTokenList, keyStore, pendingMark,currentTokenDecimals,currentTokenName, currentTokenAddress } = parames.info
-	console.log('pendingMark代币33333',pendingMark)
 	try{  
 	      let input = toLowerCaseKeys(keyStore)
 
+
 	      var json = (typeof input === 'object') ? input : JSON.parse(nonStrict ? input : input)
 
-	      if (json.version !== 3) {
-	          throw 'Not a V3 wallet'
-	          return 
-	      }
+	      // if (json.version !== 3) {
+	      // 		txTokenFail('','Not a V3 wallet',0,pendingMark)
+	      //     	return 
+	      // }
 	      var kdfparams = json.crypto.kdfparams
 	      
 	      scrypt(new Buffer(txPsdVal), new Buffer(kdfparams.salt,'hex'), {

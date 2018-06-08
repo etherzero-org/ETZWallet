@@ -17,7 +17,7 @@ import { setScaleText, scaleSize,ifIphoneX } from '../../utils/adapter'
 import QRCode from 'react-native-qrcode'
 import { sliceAddress,timeStamp2FullDate } from '../../utils/splitNumber'
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
+import Toast from 'react-native-root-toast'
 class TextInstructions extends Component{
   static defaultProps = {
     inColor: '#657CAB',
@@ -64,7 +64,10 @@ class TradingRecordDetail extends Component{
   }
   onCopyBtn = () => {
     Clipboard.setString(this.props.detailInfo.tx_receiver)
-    Toast.showLongBottom(I18n.t('copy_successfully'))
+    let t = Toast.show(I18n.t('copy_successfully'))
+    setTimeout(() => {
+      Toast.hide(t)
+    },1000)
   }
 
   

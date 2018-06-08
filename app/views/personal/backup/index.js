@@ -29,7 +29,7 @@ const Wallet = require('ethereumjs-wallet')
 
 import { toLogin } from '../../../root'
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
+import Toast from 'react-native-root-toast'
 
 import accountDB from '../../../db/account_db'
 
@@ -97,7 +97,11 @@ class BackUpAccount extends Component{
         visible: false,
         loadingText: ''
       })
-      Toast.showLongBottom(I18n.t('delete_successfully'))
+      let t = Toast.show(I18n.t('delete_successfully'))
+      setTimeout(() => {
+        Toast.hide(t)
+      },1000)
+
       if(this.props.accountsNumber === 1){
         setTimeout(() => {
           toLogin()

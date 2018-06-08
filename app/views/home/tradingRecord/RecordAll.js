@@ -47,7 +47,7 @@ class RecordAll extends Component{
         <FlatList
           data={this.props.list}
           renderItem={this.renderAll}
-          keyExtractor = {(item, index) => index}
+          keyExtractor={(item, index) => index.toString()}
           ListEmptyComponent={this.ListEmptyComponent}
         />
       </View>

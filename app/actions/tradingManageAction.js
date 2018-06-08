@@ -11,7 +11,8 @@ const insert2TradingDBAction = (data) => {
 			type: types.SAVE_TO_RECORD_SUC,
 			payload: {
 				sucdata,
-				insertMark: data.tx_random
+				insertMark: data.tx_random,
+				isToken: data.isToken
 			}
 		}
 	}
@@ -62,6 +63,14 @@ const makeTxByETZAction = (info) => {
 			}
 		}
 	}
+	// const psdErr = (msg) => {
+	// 	return {
+	// 		type: types.TX_ETZ_PSD_ERROR,
+	// 		payload:{
+	// 			msg
+	// 		}
+	// 	}
+	// }
 	return(dispatch,getState) => {
 		dispatch(start()),
 
@@ -69,6 +78,7 @@ const makeTxByETZAction = (info) => {
 			parames: {
 				info
 			},
+			// txETZPsdErr: (msg) => {dispatch(psdErr(msg))},
 			txETZSuccess: (sucdata1,sucdata2) => {dispatch(suc(sucdata1,sucdata2))},
 			txETZFail: (faildata,msg,order,mark) => {dispatch(fail(faildata,msg,order,mark))}
 		})
@@ -116,6 +126,7 @@ const makeTxByTokenAction = (info) => {
 }
 
 const resetTxStatusAction = () => {
+	console.log('初始化action')
 	const reset = () => {
 		return {
 			type: types.RESET_TX_STATUS
@@ -125,9 +136,40 @@ const resetTxStatusAction = () => {
 		dispatch(reset())
 	}
 }
+const showLoadingAction = (visible,text) => {
+	console.log('action visible111',visible)
+	const show = () => {
+		return {
+			type: types.SHOW_LOADING,
+			payload:{
+				visible,
+				text
+			}
+		}
+	}
+	return (dispatch,getState) => {
+		dispatch(show())
+	}
+}
+const updateTxListAction = (status) => {
+	const update = () => {
+		return {
+			type: types.UPDATE_TX_LIST,
+			payload:{
+				status
+			}
+		}
+	}
+	return (dispatch,getState) => {
+		dispatch(update())
+	}
+}
+
 export {
 	insert2TradingDBAction,
 	makeTxByETZAction,
 	makeTxByTokenAction,
-	resetTxStatusAction
+	resetTxStatusAction,
+	showLoadingAction,
+	updateTxListAction,
 }

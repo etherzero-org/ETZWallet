@@ -8,7 +8,12 @@ import {
 import Modal from 'react-native-modal'
 import { pubS } from '../styles/'
 import I18n from 'react-native-i18n'
-export default class Loading extends Component {
+
+import { connect } from 'react-redux'
+
+import { showLoadingAction } from '../actions/tradingManageAction'
+
+class LoadingModal extends Component {
   constructor(props) {
     super(props);
   
@@ -16,13 +21,7 @@ export default class Loading extends Component {
       visible: false
     };
   }
-  componentWillReceiveProps(nextProps) {
-    if(nextProps.loadingVisible !== this.props.loadingVisible && nextProps.loadingVisible){
-      this.setState({visible:true})
-    }else{
-      this.setState({visible:false})
-    }
-  }
+
   static defaultProps = {
     opacity: .3,
     loadingText:I18n.t('loading'),
@@ -30,20 +29,21 @@ export default class Loading extends Component {
 
   }
   onPressClose = () => {
-    this.setState({
-      visible: false
-    })
+    this.props.dispatch.showLoadingAction(false)
   }
   render(){
+    const { loadingVisible, loadingText} = this.props.tradingManageReducer
+
+    console.log('loadingVisible444444=======',loadingVisible)
     return(
         <Modal
           animationIn={'slideInUp'}
           animationOut={'slideOutDown'}
-          isVisible={this.state.visible} 
+          isVisible={loadingVisible} 
           onBackButtonPress={() => this.onPressClose()}
           style={[pubS.center,{flex:1,}]}
-          backdropColor={this.props.bgColor}
-          backdropOpacity={this.props.opacity}
+          backdropColor={'#fff'}
+          backdropOpacity={.3}
           useNativeDriver={true}
         >
          <View style={{alignSelf:'center'}}>
@@ -52,9 +52,15 @@ export default class Loading extends Component {
               indeterminate={true}
               size={'large'}
             />
-            <Text style={{color:'#144396'}}>{this.props.loadingText}</Text>
+            <Text style={{color:'#144396'}}>{loadingText}</Text>
          </View> 
         </Modal>
     )
   }
 }
+
+export default connect(
+  state => ({
+    tradingManageReducer: state.tradingManageReducer
+  })
+)(LoadingModal)

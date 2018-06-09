@@ -11,6 +11,12 @@ const initState = {
 
   pendingTxList: [],
   txStateMark: -1,//状态发生改变的这条交易记录的标记
+
+  loadingVisible: false,
+  loadingText: '',
+
+  txSuccessUpdate: false,
+  txetzpassworderror: '',
 }
 export default function tradingManageReducer (state = initState,action) {
 	switch(action.type){
@@ -44,11 +50,42 @@ export default function tradingManageReducer (state = initState,action) {
     case types.MAKE_TX_BY_TOKEN_FAIL:
       return txTokenFail(state,action)
       break
+    case types.SHOW_LOADING:
+      return onShowLoading(state,action)
+      break
+    case types.UPDATE_TX_LIST:
+      return onUpdateTxList(state,action)
+      break
+    case types.TX_ETZ_PSD_ERROR:
+      return txETZPsdErr(state,action)
+      break
 		default:
 			return state
 			break
 
 	}
+}
+//交易etz密码出错
+const txETZPsdErr = (state,action) => {
+  return {
+    ...state,
+    txetzpassworderror: action.payload.msg
+  }
+}
+
+const onUpdateTxList = (state,action) => {
+  return {
+    ...state,
+    txSuccessUpdate: action.payload.status
+  }
+}
+const onShowLoading = (state,action) => {
+  const { visible,text } = action.payload
+  return {
+    ...state,
+    loadingVisible: visible,
+    loadingText: text ? text : '',
+  }
 }
 const txReset = (state,action) => {
   return {
@@ -57,7 +94,9 @@ const txReset = (state,action) => {
     txEtzHash: '',
     txErrorMsg: '',
     txErrorOrder: 1,
-
+    saveRecordSuc: false,
+    txSuccessUpdate: false,
+    txetzpassworderror: '',
   }
 }
 
@@ -91,6 +130,7 @@ const txETZSuc = (state,action) => {
 const txETZFail = (state,action) => {
   const { faildata,msg,order,mark } = action.payload
   console.log('pendingMark55555 txETZFail',mark)
+  console.log('hash222222222',faildata)
   return {
     ...state,
     txEtzStatus: 0,
@@ -104,7 +144,7 @@ const txETZFail = (state,action) => {
 
 
 const saveSuc = (state,action) => {
-  const { sucdata, insertMark } = action.payload
+  const { sucdata, insertMark,isToken } = action.payload
   console.log('交易----插入数据库成功 的insertMark',insertMark)
   console.log('pendingTxList=====',state.pendingTxList)
   let newState = Object.assign({},state)
@@ -112,7 +152,7 @@ const saveSuc = (state,action) => {
   console.log('newState.pendingTxList====',newState.pendingTxList)
   return {
     ...newState,
-    saveRecordSuc: true,
+    saveRecordSuc: isToken ? false : true,
   }
 }
 const saveFail = (state,action) => {

@@ -28,7 +28,9 @@ import { contractAbi } from '../../utils/contractAbi'
 import I18n from 'react-native-i18n'
 import { getTokenGas, getGeneralGas } from '../../utils/getGas'
 import { fromV3 } from '../../utils/fromV3'
-import { scientificToNumber,splitDecimal } from '../../utils/splitNumber'
+
+import { splitDecimal } from '../../utils/splitNumber'
+
 import accountDB from '../../db/account_db'
 
 const EthUtil = require('ethereumjs-util')
@@ -37,7 +39,6 @@ const EthereumTx = require('ethereumjs-tx')
 
 let self = null
 
-import Toast from 'react-native-toast'
 import { platform } from 'os';
 
 class Payment extends Component{
@@ -89,8 +90,9 @@ class Payment extends Component{
      
     return true;
   }
-  componentWillMount(){
 
+  componentWillMount(){
+    console.log('密码1111111111111111',this.state.txPsdVal)
     const { fetchTokenList } = this.props.tokenManageReducer 
 
     const { currentAccount } = this.props.accountManageReducer
@@ -151,8 +153,6 @@ class Payment extends Component{
   
 
    this.assetsValue()
-
-
   }
   
   componentDidMount(){
@@ -210,6 +210,11 @@ class Payment extends Component{
 
   componentWillReceiveProps(nextProps){
     const { scanAddress, scanCurToken} = nextProps.accountManageReducer
+    const { saveRecordSuc,pendingTxList } = nextProps.tradingManageReducer
+
+    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue, } = this.state
+
+    const { fetchTokenList,etzBalance } = this.props.tokenManageReducer 
     if(this.props.accountManageReducer.scanAddress !== scanAddress && scanAddress.length > 0){
       this.setState({
         receiverAddress: scanAddress,
@@ -217,16 +222,13 @@ class Payment extends Component{
       })
     }
 
-    const { saveRecordSuc,pendingTxList } = nextProps.tradingManageReducer
-
-    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue, } = this.state
-    const { fetchTokenList,etzBalance } = this.props.tokenManageReducer 
 
     //插入数据库成功 开始发送交易action
 
     if(this.props.tradingManageReducer.saveRecordSuc !== saveRecordSuc && saveRecordSuc){
       //插入数据库成功
       console.log('插入数据库成功')
+      console.log('componentWillReceiveProps密码',txPsdVal)
       this.onPressClose()
       this.props.navigator.push({
         screen: 'tx_record_list',
@@ -241,7 +243,7 @@ class Payment extends Component{
           statusBarTextColorScheme:'light'
         }),
         passProps:{
-          etzBalance: this.state.currentAssetValue,//etz或者代币资产金额
+          etzBalance: splitDecimal(this.state.currentAssetValue),//etz或者代币资产金额
           etz2rmb: 0,
           curToken: this.state.currentTokenName,//token缩写  etz即ETZ
           // currencySymbol: this.props.currencySymbol,//  货币符号
@@ -282,7 +284,7 @@ class Payment extends Component{
   }
 
   componentWillUnmount(){
-    // this.onPressClose()
+    this.onPressClose()
     Picker.hide()
     this.keyboardDidShowListener.remove()
     this.keyboardDidHideListener.remove()
@@ -459,6 +461,7 @@ class Payment extends Component{
   onPressPayBtn = () => {
     
     const { txPsdVal, txPsdWarning, loadingText,loadingVisible } = this.state
+    console.log('确认支付密码',txPsdVal)
     if(txPsdVal.length === 0){
       Keyboard.dismiss();
       this.setState({
@@ -513,12 +516,10 @@ class Payment extends Component{
           currentAccountName: `0x${senderAddress}`,
           tx_random:  Math.round(Math.random() * 10000)
         }))
-        // this.makeTransactByETZ(this.state.keyStore)
       }else{
-        // this.makeTransactByToken()
         let tokenRandom = Math.round(Math.random() * 10000)
 
-        self.props.dispatch(insert2TradingDBAction({
+        this.props.dispatch(insert2TradingDBAction({
           tx_hash: '',
           tx_value: txValue,
           tx_sender: `0x${senderAddress}`,
@@ -529,7 +530,7 @@ class Payment extends Component{
           currentAccountName: `0x${senderAddress}`,
           tx_random:  tokenRandom
         }))
-        self.props.dispatch(insert2TradingDBAction({
+        this.props.dispatch(insert2TradingDBAction({
           tx_hash: '',
           tx_value: '0.00',
           tx_sender: `0x${senderAddress}`,
@@ -538,260 +539,12 @@ class Payment extends Component{
           tx_token: "ETZ",
           tx_result: -1,
           currentAccountName: `0x${senderAddress}`,
-          tx_random:  tokenRandom
+          tx_random:  tokenRandom,
+          isToken: true//这条是代币插入
         }))
       }
   }
-  // async makeTransactByETZ(input){
-  //   const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue } = this.state
-  //   const { fetchTokenList } = this.props.tokenManageReducer 
-  //   try{  
-
-        
-        
-
-        
-
-      
-  //   }catch(error){
-  //     console.log('error2==',error)
-  //     this.onPressClose()
-  //     Alert.alert(error)
-  //   }
-  // }
-
-  // async txETZ(seed){
-  //   const { senderAddress,txValue,receiverAddress,noteVal,gasValue } = this.state
-  //   let privKey = seed.toString('hex')
-  //   console.log('privKey==',privKey)
-  //   let bufPrivKey = new Buffer(privKey, 'hex')
-
-  //   let nonceNumber = await web3.eth.getTransactionCount(`0x${senderAddress}`)
-
-  //   console.log('nonceNumber===',nonceNumber)
-
-  //   console.log('txValue==',txValue)
-  //   let totalValue = await web3.utils.toWei(txValue,'ether')
-  //   let hex16 = parseInt(totalValue).toString(16)     
-    
-  //   const txParams = {
-  //       nonce: `0x${nonceNumber.toString(16)}`,
-  //       gasPrice: '0x09184e72a000', 
-  //       gasLimit: `0x${parseFloat(gasValue).toString(16)}`,
-  //       to: receiverAddress,
-  //       value: `0x${hex16}`,
-  //       data: '',
-  //       chainId: 88
-  //   }
-  //   console.log('txParams====',txParams)
-  //   const tx = new EthereumTx(txParams)
-  //   tx.sign(bufPrivKey)
-  //   const serializedTx = tx.serialize()
-  //   console.log('serializedTx==',serializedTx)
-
-    
-  //   let hashVal = ''
-  //   web3.eth.sendSignedTransaction(`0x${serializedTx.toString('hex')}`)
-  //   .on('transactionHash', function(hash){
-  //     console.log('hash==',hash)
-  //     hashVal = hash
-  //     let passDetailInfo = {
-  //       tx_value: txValue,                         
-  //       tx_token: 'ETZ',                               
-  //       tx_sender: `0x${senderAddress}`,               
-  //       tx_receiver: receiverAddress,                  
-  //       tx_note: noteVal,                              
-  //       tx_hash: hash,                              
-  //       tx_block_number: 0,                            
-  //       tx_time: '',  
-  //       tx_result: 1
-  //     }
-  //     self.onPressClose()
-  //    self.props.navigator.push({                          
-  //      screen: 'trading_record_detail',                   
-  //      title:I18n.t('tx_records_1'),                      
-  //      navigatorStyle: MainThemeNavColor, 
-  //      passProps: {  
-  //       detailInfo:passDetailInfo,
-  //      }                                                  
-  //    })                                                   
-
-
-  //   })
-  //   .on('receipt', function(receipt){
-  //       console.log('receipt==',receipt)
-  //       let sendResult = 1
-  //       if(receipt.status==="0x1" || receipt.status == true){
-  //           //更新etz数量
-  //            self.props.dispatch(refreshTokenAction(senderAddress,fetchTokenList))
-  //            setTimeout(() => {
-  //              Alert.alert(I18n.t('send_successful'))
-  //            },1000)
-  //        }else{
-  //          sendResult = 0
-  //          Alert.alert(I18n.t('send_failure'))
-  //        }
-        
-
-  //       self.props.dispatch(insert2TradingDBAction({
-  //         tx_hash: hashVal,
-  //         tx_value: txValue,
-  //         tx_sender: `0x${senderAddress}`,
-  //         tx_receiver: receiverAddress,
-  //         tx_note: noteVal,
-  //         tx_token: "ETZ",
-  //         tx_result: sendResult,
-  //         currentAccountName: `0x${senderAddress}`
-  //       }))
-  //   })
-  //   // .on('confirmation', function(confirmationNumber, receipt){ 
-      
-  //   // })
-  //   .on('error', (error) => {
-  //     console.log('error1==',error)
-  //     Alert.alert(`${error}`)
-  //     self.onPressClose()
-  //     self.props.navigator.pop()
-  //   })
-
-  // }
-
-  // async makeTransactByToken(){
-    
-  //   const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,currentTokenName,currentTokenDecimals,currentTokenAddress,gasValue } = this.state
-  //   const { fetchTokenList } = this.props.tokenManageReducer 
-
-  //   try{
-  //     let newWallet = await fromV3(this.state.keyStore,txPsdVal)
-  //     let privKey = newWallet.privKey.toString('hex')
-      
-  //     let txNumber = parseFloat(txValue) *  Math.pow(10,currentTokenDecimals)
-      
-  //     let txNum = ''
-  //     if(/e/.test(`${txNumber}`)){
-  //       let t = scientificToNumber(`${txNumber}`.replace('+',''))
-  //       txNum = `${t}`
-  //     }else{
-  //       txNum = `${txNumber}`
-  //     }
-  //     console.log('txNum==',txNum)
-      
-  //     let hex16 = parseInt(txNum).toString(16)      
-  //     console.log('hex16',hex16)
-  //     let myContract = new web3.eth.Contract(contractAbi, currentTokenAddress)
-
-  //     let data = myContract.methods.transfer(receiverAddress, `0x${hex16}`).encodeABI()
-
-  //     web3.eth.getTransactionCount(`0x${senderAddress}`, function(error, nonce) {
-  //       let gas = parseFloat(gasValue) + 500
-  //       const txParams = {
-  //           nonce: web3.utils.toHex(nonce),
-  //           gasPrice:"0x098bca5a00",
-  //           gasLimit: `0x${gas.toString(16)}`,
-  //           to: currentTokenAddress,
-  //           value :"0x0",
-  //           data: data,
-  //           chainId: "0x58"
-  //       }
-  //       console.log("txParams:", txParams)
-
-  //       const tx = new EthereumTx(txParams)
-  //       // 通过明文私钥初始化钱包对象key
-  //       const privateKey = Buffer.from(privKey, 'hex')
-
-  //       let key = Wallet.fromPrivateKey(privateKey)
-
-        
-  //       tx.sign(key.getPrivateKey())
-
-  //       var serializedTx = '0x' + tx.serialize().toString('hex')
-
-  //       console.log("serializedTx: ", serializedTx)
-        
-  //       let hashVal = ''
-  //       web3.eth.sendSignedTransaction(serializedTx).on('transactionHash', function(hash){
-  //           console.log('transactionHash:', hash)
-  //           hashVal = hash
-
-  //           let passDetailInfo = {
-  //             tx_value: txValue,                         
-  //             tx_token: currentTokenName,                               
-  //             tx_sender: `0x${senderAddress}`,               
-  //             tx_receiver: receiverAddress,                  
-  //             tx_note: noteVal,                              
-  //             tx_hash: hash,                              
-  //             tx_block_number: 0,                            
-  //             tx_time: '',  
-  //             tx_result: 1
-  //           }
-
-  //           self.onPressClose()
-
-  //           self.props.navigator.push({                          
-  //              screen: 'trading_record_detail',                   
-  //              title:I18n.t('tx_records_1'),                      
-  //              navigatorStyle: MainThemeNavColor, 
-  //              passProps: {  
-  //               detailInfo:passDetailInfo,
-  //              }                                                  
-  //           })
-
-  //       })
-  //       // .on('confirmation', function(confirmationNumber, receipt){
-  //           // console.log('confirmation:', confirmationNumber)
-            
-  //       // })
-  //       .on('receipt', function(receipt){
-  //           console.log('receipt:', receipt)
-  //           let sendResult = 0
-  //           if(receipt.status==="0x1" || receipt.status == true){
-  //             sendResult = 1
-  //             self.props.dispatch(refreshTokenAction(senderAddress,fetchTokenList))
-  //             setTimeout(() => {
-  //               Alert.alert(I18n.t('send_successful'))
-  //             },1000)
-  //           }else{
-  //             Alert.alert(I18n.t('send_failure'))
-  //           }
-            
-
-  //           self.props.dispatch(insert2TradingDBAction({
-  //             tx_hash: hashVal,
-  //             tx_value: txValue,
-  //             tx_sender: `0x${senderAddress}`,
-  //             tx_receiver: receiverAddress,
-  //             tx_note: noteVal,
-  //             tx_token: currentTokenName,
-  //             tx_result: sendResult,
-  //             currentAccountName: `0x${senderAddress}`
-  //           }))
-  //           self.props.dispatch(insert2TradingDBAction({
-  //             tx_hash: hashVal,
-  //             tx_value: '0.00',
-  //             tx_sender: `0x${senderAddress}`,
-  //             tx_receiver: receiverAddress,
-  //             tx_note: noteVal,
-  //             tx_token: "ETZ",
-  //             tx_result: sendResult,
-  //             currentAccountName: `0x${senderAddress}`
-  //           }))
-
-  //       }).on('error', (error) => {
-  //         console.log(error)
-  //         self.onPressClose()
-  //         self.props.navigator.pop()
-  //         Alert.alert(`${error}`,)
-
-  //         // alert(error)
-  //       });
-  //     })
-
-  //   }catch (error) {
-  //     this.onPressClose()
-  //     Alert.alert(error)
-  //   }
-
-  // }
+  
   onChangePayPsdText = (val) => {
     this.setState({
       txPsdVal: val,
@@ -836,7 +589,7 @@ class Payment extends Component{
             onChangeText={this.onChangeTxValue}
             warningText={txValueWarning}
             keyboardType={'numeric'}
-            amount={this.state.currentAssetValue}
+            //amount={splitDecimal(this.state.currentAssetValue)}
           />
           <TextInputComponent
             placeholder={I18n.t('note_1')}

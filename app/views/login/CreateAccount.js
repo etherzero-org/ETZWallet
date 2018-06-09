@@ -20,7 +20,6 @@ import { connect } from 'react-redux'
 import { createAccountAction,genMnemonicAction } from '../../actions/accountManageAction'
 
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
 class CreateAccount extends Component{
   constructor(props){
       super(props)
@@ -54,7 +53,6 @@ class CreateAccount extends Component{
       this.setState({
         visible: false
       })
-      // Toast.showLongBottom(I18n.t('create_account_successfully'))
       this.props.navigator.push({
         screen: 'write_mnemonic',
         title: I18n.t('backup_mnemonic'),

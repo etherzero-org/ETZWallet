@@ -42,7 +42,7 @@ export default class TextInputComponent extends Component{
         >
           <View 
             pointerEvents={touchable ? 'none' : 'auto'}
-            style={[styles.textInputView,{borderBottomWidth: Platform.OS === 'ios' ? StyleSheet.hairlineWidth : 0, marginTop: iptMarginTop,height: multiline ? scaleSize(190) :scaleSize(99)}]}
+            style={[styles.textInputView,{ alignItems:Platform.OS ==='ios' ? 'center': null,borderBottomWidth: Platform.OS === 'ios' ? StyleSheet.hairlineWidth : 0, marginTop: iptMarginTop,height: multiline ? scaleSize(190) :scaleSize(99)}]}
           >
             
           
@@ -57,33 +57,31 @@ export default class TextInputComponent extends Component{
           />
           {
             amount.length > 0 ? 
-            <View style={pubS.amountViewStyle}>
               <Text>{amount}</Text>
+            : null
+          }
+          {
+            toMore ?
+            <View style={pubS.arrowViewStyle}>
+              <Image source={require('../images/xhdpi/btn_ico_payment_select_def.png')} style={{width: scaleSize(16),height: scaleSize(30)}}/>
             </View>
             : null
           }
-        {
-          toMore ?
-          <View style={pubS.arrowViewStyle}>
-            <Image source={require('../images/xhdpi/btn_ico_payment_select_def.png')} style={{width: scaleSize(16),height: scaleSize(30)}}/>
-          </View>
-          : null
-        }
-        {
-          // <TouchableOpacity activeOpacity={.7} onPress={onPressIptRight} style={{position:'absolute',right:4,top:scaleSize(32),}}>
-          //   {
-          //     isScan ?
-          //     <Image source={require('../images/xhdpi/btn_ico_payment_scan_def.png')} style={{width: scaleSize(45),height: scaleSize(43)}}/>
-          //     : null
-          //   }
-          //   {
-          //     coinUnit.length > 0 ?
-          //     <Text style={pubS.font26_4}>{coinUnit}</Text>
-          //     : null
-          //   }
-          // </TouchableOpacity>
-        }
-        <Text style={[pubS.font24_1,{marginTop: multiline ? 0 : -8,marginLeft: 4}]}>{warningText}</Text>
+          {
+            // <TouchableOpacity activeOpacity={.7} onPress={onPressIptRight} style={{position:'absolute',right:4,top:scaleSize(32),}}>
+            //   {
+            //     isScan ?
+            //     <Image source={require('../images/xhdpi/btn_ico_payment_scan_def.png')} style={{width: scaleSize(45),height: scaleSize(43)}}/>
+            //     : null
+            //   }
+            //   {
+            //     coinUnit.length > 0 ?
+            //     <Text style={pubS.font26_4}>{coinUnit}</Text>
+            //     : null
+            //   }
+            // </TouchableOpacity>
+          }
+          <Text style={[pubS.font24_1,{marginTop: multiline ? 0 : -8,marginLeft: 4}]}>{warningText}</Text>
         </View>
       </TouchableOpacity>
     )
@@ -105,8 +103,6 @@ const styles = StyleSheet.create({
         alignSelf:'center',
         width: 360,
         backgroundColor: '#fff',
-        flexDirection:'row',
-        justifyContent:'space-between'
       },
       {
         borderColor:'#DBDFE6',
@@ -114,8 +110,8 @@ const styles = StyleSheet.create({
         alignSelf:'center',
         width: scaleSize(680),
         backgroundColor: '#fff',
-        flexDirection:'row',
-        justifyContent:'space-between'
+        // borderWidth:1,
+        // borderColor:'red',
       },
       {
         borderColor:'#DBDFE6',
@@ -123,9 +119,9 @@ const styles = StyleSheet.create({
         padding: 0,
         width: scaleSize(680),
         backgroundColor: '#fff',
-        flexDirection:'row',
-        justifyContent:'space-between',
-        paddingTop: scaleSize(20)
+        paddingTop: scaleSize(20),
+        // borderWidth:1,
+        // borderColor:'red',
       }
     )
 

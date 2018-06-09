@@ -17,7 +17,7 @@ import { deleteMnemonicAction, resetDeleteStatusAction,createAccountAction } fro
 import Modal from 'react-native-modal'
 import { connect } from 'react-redux' 
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
+import Toast from 'react-native-root-toast'
 class VerifyMnemonic extends Component{
 	constructor(props){ 
 		super(props)
@@ -61,7 +61,11 @@ class VerifyMnemonic extends Component{
 	      this.setState({
 	        loadingVisible: false
 	      })
-	      Toast.showLongBottom(I18n.t('create_account_successfully'))
+	      let t = Toast.show(I18n.t('create_account_successfully'))
+		  setTimeout(() => {
+		   		Toast.hide(t)
+		  },1000)
+
 	      this.props.navigator.push({
 	        screen: 'create_account_success',
 	        navigatorStyle: DetailNavigatorStyle,

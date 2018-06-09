@@ -19,7 +19,7 @@ import { toHome } from '../../../root'
 import { resetDeleteStatusAction } from '../../../actions/accountManageAction'
 import { Loading } from '../../../components/' 
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
+import Toast from 'react-native-root-toast'
 class ImportAccount extends Component{
   constructor(props){
     super(props)
@@ -46,10 +46,11 @@ class ImportAccount extends Component{
       })
       setTimeout(() => {
         if(nextProps.accountManageReducer.importStatus === 'success'){
-          Toast.showLongBottom(I18n.t('import_successful'))
-            setTimeout(() => {
-              toHome()
-            },1000)
+          let t = Toast.show(I18n.t('import_successful'))
+          setTimeout(() => {
+            Toast.hide(t)
+            toHome()
+          },1000)
           
         }else{
           if(nextProps.accountManageReducer.importStatus === 'fail'){

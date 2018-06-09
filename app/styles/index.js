@@ -66,10 +66,14 @@ const TabBarIOSStyle = {
   // tabBarTextFontFamily: 'Avenir-Medium', //change the tab font family
   // tabBarLabelColor: '#ffb700', // iOS only. change the color of tab text
   // tabBarSelectedLabelColor: 'red', // iOS only. change the color of the selected tab text
-  forceTitlesDisplay: true, // Android only. If true - Show all bottom tab labels. If false - only the selected tab's label is visible.
-  tabBarHideShadow: true // Remove default tab bar top shadow (hairline)
+  // forceTitlesDisplay: true, // Android only. If true - Show all bottom tab labels. If false - only the selected tab's label is visible.
+  // tabBarHideShadow: true // Remove default tab bar top shadow (hairline)
+
+  navBarHeight: 45, // Optional, set the navBar height in pixels.
+  topTabsHeight: scaleSize(98),
 }
 const TabBarAppStyle = {
+  keepStyleAcrossPush: false,
   tabBarHidden: false, // make the tab bar hidden
   tabBarButtonColor: '#C7CAD0',
   tabBarSelectedButtonColor: '#2B8AFF', 
@@ -99,7 +103,7 @@ const SingleScreenAppNavigatorStyle = {
   // navBarHideOnScroll: false, // make the nav bar hidden only after the user starts to scroll
   // navBarTranslucent: false, // make the nav bar semi-translucent, works best with drawUnderNavBar:true
   // navBarTransparent: false, // make the nav bar transparent, works best with drawUnderNavBar:true,
-  // navBarNoBorder: false, // hide the navigation bar bottom border (hair line). Default false
+  navBarNoBorder: true, // hide the navigation bar bottom border (hair line). Default false
   // drawUnderNavBar: false, // draw the screen content under the nav bar, works best with navBarTranslucent:true
   // drawUnderTabBar: false, // draw the screen content under the tab bar (the tab bar is always translucent)
   // navBarBlur: false, // blur the entire nav bar, works best with drawUnderNavBar:true

@@ -17,7 +17,8 @@ import { setScaleText, scaleSize,ifIphoneX } from '../../utils/adapter'
 import QRCode from 'react-native-qrcode'
 import { sliceAddress,timeStamp2FullDate } from '../../utils/splitNumber'
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
+import Toast from 'react-native-root-toast'
+import { NavHeader } from '../../components/'
 class TextInstructions extends Component{
   static defaultProps = {
     inColor: '#657CAB',
@@ -34,7 +35,11 @@ class TextInstructions extends Component{
   }
 }
 
-
+const MyStatusBar = ({backgroundColor, ...props}) => (
+  <View style={[styles.statusBar, { backgroundColor }]}>
+    <StatusBar translucent backgroundColor={backgroundColor} {...props} />
+  </View>
+)
 class TradingRecordDetail extends Component{
   constructor(props){
     super(props)
@@ -64,20 +69,35 @@ class TradingRecordDetail extends Component{
   }
   onCopyBtn = () => {
     Clipboard.setString(this.props.detailInfo.tx_receiver)
-    Toast.showLongBottom(I18n.t('copy_successfully'))
+    let t = Toast.show(I18n.t('copy_successfully'))
+    setTimeout(() => {
+      Toast.hide(t)
+    },1000)
   }
 
-  
+  onPressBack = () => {
+    this.props.navigator.pop()
+  }
   render(){
     const { txDetail } = this.state
     console.log('txDetail==222222222222=',txDetail)
     return(
       <View style={pubS.container}>
         {
-          Platform.OS == 'ios' ?
-          <StatusBar backgroundColor="#FFFFFF"  barStyle="light-content" hidden={false} />
-          : null
+          // Platform.OS == 'ios' ?
+          // <StatusBar backgroundColor="#FFFFFF"  barStyle="light-content" hidden={false} />
+          // : null
         }
+        <MyStatusBar backgroundColor="#144396" barStyle="light-content" />
+        <NavHeader
+          navTitleColor={'#fff'}
+          navBgColor={'#144396'}
+          isAccount={false}
+          navTitle={I18n.t('tx_records_1')}
+          pressBack={this.onPressBack}
+          marginTopValue={0}
+        />
+
         <Image source={ txDetail.tx_result === 1 ? require('../../images/xhdpi/ico_selectasset_transactionrecords_succeed.png') : require('../../images/xhdpi/ico_selectasset_transactionrecords_error.png')} style={styles.iocnStyle}/>
         <View style={styles.topView}></View>
         <View style={styles.mainStyle}>
@@ -134,7 +154,16 @@ class TradingRecordDetail extends Component{
     )
   }
 }
+
+
+const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const APPBAR_HEIGHT = Platform.OS === 'ios' ? 44 : 56;
+
+
 const styles = StyleSheet.create({
+    statusBar: {
+      height: STATUSBAR_HEIGHT,
+    },
     btnStyle:{
         height: scaleSize(50),
         width: scaleSize(170),
@@ -149,7 +178,7 @@ const styles = StyleSheet.create({
           height: scaleSize(100),
           position:'absolute',
           left: 160,
-          top: scaleSize(50),
+          top: scaleSize(160),
           zIndex: 999,
         },
         {
@@ -157,7 +186,7 @@ const styles = StyleSheet.create({
           height: scaleSize(100),
           position:'absolute',
           left: scaleSize(325),
-          top: scaleSize(50),
+          top: scaleSize(160),
           zIndex: 999,
         },
         {
@@ -165,7 +194,7 @@ const styles = StyleSheet.create({
           height: scaleSize(100),
           position:'absolute',
           left: scaleSize(325),
-          top: scaleSize(50),
+          top: scaleSize(160),
           zIndex: 999,
         }
       )

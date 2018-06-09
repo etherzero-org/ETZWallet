@@ -16,7 +16,7 @@ import { pubS,DetailNavigatorStyle } from '../../styles/'
 import { setScaleText, scaleSize } from '../../utils/adapter'
 import {ArrowToDetail} from '../../components/'
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
+import Toast from 'react-native-root-toast'
 import DeviceInfo from 'react-native-device-info'
 class Personal extends Component{
   constructor(props){
@@ -48,7 +48,10 @@ class Personal extends Component{
     }
 
     this.backPressed = 1;
-    Toast.showLongBottom(I18n.t('click_again'))  
+    let t = Toast.show(I18n.t('click_again'))
+    setTimeout(() => {
+      Toast.hide(t)
+    },1000) 
     // this.props.navigator.showSnackbar({
     //   text: 'Press one more time to exit',
     //   duration: 'long',

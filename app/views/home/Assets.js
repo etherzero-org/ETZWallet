@@ -27,9 +27,9 @@ import { splitDecimal, scientificToNumber} from '../../utils/splitNumber'
 import {Scan} from '../../components/'
 
 import { insertToTokenAction,initSelectedListAction,refreshTokenAction,fetchTokenAction } from '../../actions/tokenManageAction'
-import { insert2TradingDBAction,resetTxStatusAction } from '../../actions/tradingManageAction'
+import { insert2TradingDBAction,resetTxStatusAction,updateTxListAction } from '../../actions/tradingManageAction'
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
+import Toast from 'react-native-root-toast'
 
 
 import { Navigation } from 'react-native-navigation'
@@ -112,7 +112,12 @@ class Assets extends Component{
     }
 
     this.backPressed = 1;
-    Toast.showLongBottom(I18n.t('click_again')) 
+
+    let t = Toast.show(I18n.t('click_again'))
+    setTimeout(() => {
+      Toast.hide(t)
+    },1000)
+
     // this.props.navigator.showSnackbar({
     //   text: 'Press one more time to exit',
     //   duration: 'long',
@@ -220,45 +225,52 @@ class Assets extends Component{
     //交易状态
 
     const { txEtzStatus,txEtzHash, txErrorMsg,txErrorOrder,txStateMark } = nextProps.tradingManageReducer
+    console.log('this.props.tradingManageReducer.txEtzStatus===',this.props.tradingManageReducer.txEtzStatus)
+    console.log('txEtzStatus====',txEtzStatus)
     if(this.props.tradingManageReducer.txEtzStatus !== txEtzStatus){
       if(txEtzStatus === 1){
          this.props.dispatch(refreshTokenAction(this.state.curAddr,fetchTokenList))
           //更新轉賬狀態
          Alert.alert(I18n.t('send_successful'))
          this.updatePending(1,txEtzHash,txStateMark)
+         this.props.dispatch(resetTxStatusAction())
          return
        }else if(txEtzStatus === 0){
-          console.log('txEtzStatus',txEtzStatus)
-          console.log('txErrorOrder',txErrorOrder)
-          console.log('txEtzHash',txEtzHash)
-          Alert.alert(txErrorMsg)
+          if(Platform.OS === 'ios'){
+            setTimeout(() => {
+              Alert.alert(txErrorMsg)
+            },2000)
+          }else{
+            Alert.alert(txErrorMsg)
+          }
           if(txErrorOrder === 1){
             this.updatePending(0,txEtzHash,txStateMark)
           }else if(txErrorOrder === 0){
             this.deletePending(txStateMark)
           }
+          this.props.dispatch(resetTxStatusAction())
           return
        }
-      this.props.dispatch(resetTxStatusAction())
+      
     }
   }
 
   async deletePending(mark){
-    console.log('删除这条记录的mark',mark)
     let delRes = await accountDB.deleteAccount({
       sql: 'delete from trading where tx_random =  ?',
       d_id: [mark],
     })
     console.log('删除结果',delRes)
 
+    if(delRes === 'success'){
+      this.props.dispatch(updateTxListAction(true))
+    }
+
   }
 
   async updatePending(status,hash,mark){
-    console.log('updatePending   status',status)
-    console.log('updatePending   mark 6666',mark)
     let block = '',
         time = '';
-
     if(hash.length === 66){
       let tx = await web3.eth.getTransaction(hash)
       let txBlock  = await web3.eth.getBlock(tx.blockNumber)
@@ -274,11 +286,12 @@ class Assets extends Component{
 
     if(updateRes === 'success'){
       console.log('updatePending成功')
+      //交易成功 更新tx list状态
+      this.props.dispatch(updateTxListAction(true))
 
     }else{
       if(updateRes === 'fail'){
          console.log('updatePending失败')
-
       }
     }
     

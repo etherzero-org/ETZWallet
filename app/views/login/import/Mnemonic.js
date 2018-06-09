@@ -17,7 +17,6 @@ import { importAccountAction,resetDeleteStatusAction,showImportLoadingAction } f
 import { connect } from 'react-redux'
 import { toHome } from '../../../root'
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
 const bip39 = require('bip39')
 
 class Mnemonic extends Component{

@@ -16,7 +16,6 @@ import { setScaleText, scaleSize } from '../../utils/adapter'
 import { TextInputComponent,Loading } from '../../components/'
 // import Mailer from 'react-native-mail'
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
 class Support extends Component{
   constructor(props){
     super(props)
@@ -42,7 +41,6 @@ class Support extends Component{
   }
 
   sendEmail = () => {
-    Toast.showLongBottom('Stay tuned')
     // const { emaiVal, contentVal } = this.state
     // let reg = /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/
     // if(!reg.test(emaiVal)){

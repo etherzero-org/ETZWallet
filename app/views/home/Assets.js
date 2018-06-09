@@ -225,15 +225,17 @@ class Assets extends Component{
     //交易状态
 
     const { txEtzStatus,txEtzHash, txErrorMsg,txErrorOrder,txStateMark } = nextProps.tradingManageReducer
-    console.log('this.props.tradingManageReducer.txEtzStatus===',this.props.tradingManageReducer.txEtzStatus)
-    console.log('txEtzStatus====',txEtzStatus)
     if(this.props.tradingManageReducer.txEtzStatus !== txEtzStatus){
+      console.log('txEtzStatus9999999999999',txEtzStatus)
       if(txEtzStatus === 1){
-         this.props.dispatch(refreshTokenAction(this.state.curAddr,fetchTokenList))
+         
           //更新轉賬狀態
          Alert.alert(I18n.t('send_successful'))
          this.updatePending(1,txEtzHash,txStateMark)
          this.props.dispatch(resetTxStatusAction())
+         // setTimeout(() => {
+          this.props.dispatch(refreshTokenAction(this.state.curAddr,fetchTokenList))
+         // },1000)
          return
        }else if(txEtzStatus === 0){
           if(Platform.OS === 'ios'){

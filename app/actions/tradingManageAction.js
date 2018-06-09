@@ -137,7 +137,7 @@ const resetTxStatusAction = () => {
 	}
 }
 const showLoadingAction = (visible,text) => {
-	console.log('action visible111',visible)
+	console.log('action visible111111111',visible)
 	const show = () => {
 		return {
 			type: types.SHOW_LOADING,

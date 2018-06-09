@@ -81,10 +81,11 @@ const onUpdateTxList = (state,action) => {
 }
 const onShowLoading = (state,action) => {
   const { visible,text } = action.payload
+  console.log('reducer visible111111111',visible)
   return {
     ...state,
     loadingVisible: visible,
-    loadingText: text ? text : '',
+    loadingText: text,
   }
 }
 const txReset = (state,action) => {

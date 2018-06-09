@@ -59,13 +59,14 @@ class Payment extends Component{
       currentTokenName: 'ETZ',
       isToken: false,
       currentTokenDecimals: 0,
-      loadingVisible: false,
+      // loadingVisible: false,
       loadingText: '',
       gasValue: '',
       currentAccountName: '',
       currentTokenAddress: '',
 
       currentAssetValue: '',//当前资产的数量 
+      keyboardHeight: 0
     }
     self = this
   }
@@ -134,6 +135,10 @@ class Payment extends Component{
     })
     this.assetsValue()
 
+
+    this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow',this._keyboardDidShow.bind(this))
+    this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide',this._keyboardDidHide.bind(this))
+
   }
   componentDidMount(){
     const tokenPickerData = ["ETZ"]
@@ -195,11 +200,33 @@ class Payment extends Component{
 
     const { saveRecordSuc,pendingTxList } = nextProps.tradingManageReducer
 
-    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue, } = this.state
-    const { fetchTokenList,etzBalance } = this.props.tokenManageReducer 
+    
 
     //插入数据库成功 开始发送交易action
+    this.sendTxAction(saveRecordSuc, pendingTxList)
+    
 
+    // if(this.props.tradingManageReducer.txetzpassworderror !== nextProps.tradingManageReducer.txetzpassworderror && nextProps.tradingManageReducer.txetzpassworderror.length > 0){
+    //   Alert.alert('密码错啦')
+    //   this.props.dispatch(resetTxStatusAction())
+    //   return
+    // }else{
+      
+    //   this.props.dispatch(resetTxStatusAction())
+    // }
+
+  }
+  _keyboardDidShow(e){
+    this.setState({
+      keyboardHeight: e.startCoordinates.height
+    })
+  }
+  _keyboardDidHide(){
+
+  }
+  sendTxAction(saveRecordSuc, pendingTxList){
+    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue, } = this.state
+    const { fetchTokenList,etzBalance } = this.props.tokenManageReducer 
     if(this.props.tradingManageReducer.saveRecordSuc !== saveRecordSuc && saveRecordSuc){
       //插入数据库成功
       console.log('插入数据库成功')
@@ -207,27 +234,8 @@ class Payment extends Component{
       //   loadingVisible: false
       // })
 
-      this.props.dispatch(showLoadingAction(false))
-      this.props.navigator.push({
-        screen: 'tx_record_list',
-        title: this.state.currentTokenName,
-        backButtonTitle:I18n.t('back'),
-        backButtonHidden:false,
-        navigatorStyle: Object.assign({},DetailNavigatorStyle,{
-          navBarHidden: true,
-          navBarTextColor:'#fff',
-          navBarBackgroundColor:'#144396',
-          statusBarColor:'#144396',
-          statusBarTextColorScheme:'light'
-        }),
-        passProps:{
-          etzBalance: splitDecimal(this.state.currentAssetValue),//etz或者代币资产金额
-          etz2rmb: 0,
-          curToken: this.state.currentTokenName,//token缩写  etz即ETZ
-          // currencySymbol: this.props.currencySymbol,//  货币符号
-          curDecimals: this.props.curDecimals,//小数点位数
-        }
-      })
+      
+      
 
       if(this.state.currentTokenName === 'ETZ'){
         this.props.dispatch(makeTxByETZAction({
@@ -258,21 +266,35 @@ class Payment extends Component{
         }))
       }
 
+      setTimeout(() => {
+        this.props.dispatch(showLoadingAction(false,''))
+        this.props.navigator.push({
+          screen: 'tx_record_list',
+          title: this.state.currentTokenName,
+          backButtonTitle:I18n.t('back'),
+          backButtonHidden:false,
+          navigatorStyle: Object.assign({},DetailNavigatorStyle,{
+            navBarHidden: true,
+            navBarTextColor:'#fff',
+            navBarBackgroundColor:'#144396',
+            statusBarColor:'#144396',
+            statusBarTextColorScheme:'light'
+          }),
+          passProps:{
+            etzBalance: splitDecimal(this.state.currentAssetValue),//etz或者代币资产金额
+            etz2rmb: 0,
+            curToken: this.state.currentTokenName,//token缩写  etz即ETZ
+            // currencySymbol: this.props.currencySymbol,//  货币符号
+            curDecimals: this.props.curDecimals,//小数点位数
+          }
+        })
+      },1000)
     }
-
-    // if(this.props.tradingManageReducer.txetzpassworderror !== nextProps.tradingManageReducer.txetzpassworderror && nextProps.tradingManageReducer.txetzpassworderror.length > 0){
-    //   Alert.alert('密码错啦')
-    //   this.props.dispatch(resetTxStatusAction())
-    //   return
-    // }else{
-      
-    //   this.props.dispatch(resetTxStatusAction())
-    // }
-
   }
-
   componentWillUnmount(){
     this.onPressClose()
+    this.keyboardDidShowListener.remove();
+    this.keyboardDidHideListener.remove();
     Picker.hide()
 
   }
@@ -303,7 +325,6 @@ class Payment extends Component{
   }  
   onChangeTxValue = (val) => {
     const { currentTokenDecimals,txValue } = this.state
-    console.log('11111111',isNaN(val))
     if(!isNaN(val)){
       //不能小于规定的小数位
       this.setState({
@@ -350,7 +371,6 @@ class Payment extends Component{
   onNextStep = () => {
     const { receiverAddress, txValue, noteVal,currentAssetValue } = this.state
     let addressReg = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{42}$/    
-
     if(!addressReg.test(receiverAddress)){
       this.setState({
         txAddrWarning: I18n.t('input_receive_address'),
@@ -429,7 +449,7 @@ class Payment extends Component{
   }
   onPressPayBtn = () => {
     
-    const { txPsdVal, txPsdWarning, loadingText,loadingVisible } = this.state
+    const { txPsdVal, txPsdWarning, loadingText } = this.state
     Keyboard.dismiss();
     if(txPsdVal.length === 0){
       this.setState({
@@ -438,13 +458,14 @@ class Payment extends Component{
       })
       return
     }else{
+      this.props.dispatch(showLoadingAction(true,I18n.t('sending')))
       this.setState({
         // loadingText: I18n.t('sending'),
         visible: false,
         modalSetp1: true,
       })
 
-      this.props.dispatch(showLoadingAction(true,I18n.t('sending')))
+      
 
       this.validatPsd()
     }
@@ -528,21 +549,20 @@ class Payment extends Component{
   }
   render(){
     const { receiverAddress, txValue, noteVal,visible,modalTitleText,modalTitleIcon,txPsdVal,
-            modalSetp1,txAddrWarning,txValueWarning,senderAddress,txPsdWarning,currentTokenName, gasValue, loadingVisible } = this.state
+            modalSetp1,txAddrWarning,txValueWarning,senderAddress,txPsdWarning,currentTokenName, gasValue } = this.state
+    
 
+    
     return(
       <View style={pubS.container}>
         <StatusBar backgroundColor="#000000"  barStyle="dark-content" animated={true} />
-        <LoadingModal />  
-        
-
-        
+        <LoadingModal/>  
         <NavHeader
           navTitle={I18n.t('send')}
           pressBack={this.onPressBack}
           toScan={this.toScan}
         />
-          <InputScrollView>
+          
         
           <TextInputComponent
             value ={currentTokenName}
@@ -565,7 +585,7 @@ class Payment extends Component{
             onChangeText={this.onChangeTxValue}
             warningText={txValueWarning}
             keyboardType={'numeric'}
-            amount={splitDecimal(this.state.currentAssetValue)} 
+            //amount={splitDecimal(this.state.currentAssetValue)} 
           />
           <TextInputComponent 
             placeholder={I18n.t('note_1')}
@@ -582,6 +602,7 @@ class Payment extends Component{
           btnPress={this.onNextStep}
           btnText={I18n.t('next')}
         />
+        {
           <Modal
             isVisible={visible}
             onBackButtonPress={this.onPressClose}
@@ -589,7 +610,7 @@ class Payment extends Component{
             style={styles.modalView}
             backdropOpacity={.8}
           >
-            <View style={styles.modalView}>
+            <View style={[styles.modalView,{marginBottom: modalSetp1 ? 0 : 10}]}>
               <View style={[styles.modalTitle,pubS.center]}>
                 <TouchableOpacity onPress={this.onPressCloseIcon} activeOpacity={.7} style={styles.modalClose}>
                   <Image source={modalTitleIcon} style={{height: scaleSize(30),width: scaleSize(30)}}/>
@@ -642,8 +663,10 @@ class Payment extends Component{
               }
             </View>
           </Modal>
+        }
+          
         
-          </InputScrollView>
+         
          
       </View>
     )
@@ -735,7 +758,6 @@ const styles = StyleSheet.create({
     },
     modalView:{
       width: scaleSize(750),
-      marginBottom:0,
       height: scaleSize(710),
 	    position: 'absolute',
 	    bottom: 0,

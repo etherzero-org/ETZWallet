@@ -59,7 +59,7 @@ class WriteMnemonic extends Component{
 	      	<Text style={[pubS.font34_1,{marginTop: scaleSize(60)}]}>{I18n.t('write_down_mnemonic')}</Text>
 	      	<Text style={[pubS.font24_2,{textAlign :'center',marginTop: scaleSize(20)}]}>{I18n.t('safe_place_mnemonic')}</Text>
 	      	<View style={[styles.mneViewStyle,pubS.center]}>
-	      		<View style={[{height: scaleSize(90),width: scaleSize(600),flexDirection:'row',flexWrap: 'wrap',}]}>
+	      		<View style={[{width: scaleSize(600),flexDirection:'row',flexWrap: 'wrap',}]}>
 		      		{
 		      			this.state.mnemonicText.map((val,index) => {
 		      				return(
@@ -94,7 +94,6 @@ class WriteMnemonic extends Component{
 }
 const styles = StyleSheet.create({
 	mneViewStyle: {
-		height: scaleSize(150),
 		width: scaleSize(680),
 		backgroundColor: '#808691',
 		borderRadius: scaleSize(10),

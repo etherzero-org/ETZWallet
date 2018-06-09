@@ -21,7 +21,14 @@ class LoadingModal extends Component {
       visible: false
     };
   }
-
+  componentWillReceiveProps(nextProps){
+    if(this.props.tradingManageReducer.loadingVisible !== nextProps.tradingManageReducer.loadingVisible){
+      console.log('nextProps.tradingManageReducer.loadingVisible1111111',nextProps.tradingManageReducer.loadingVisible)
+      this.setState({
+        visible: nextProps.tradingManageReducer.loadingVisible
+      })
+    }
+  }
   static defaultProps = {
     opacity: .3,
     loadingText:I18n.t('loading'),
@@ -29,17 +36,16 @@ class LoadingModal extends Component {
 
   }
   onPressClose = () => {
-    this.props.dispatch.showLoadingAction(false)
+    this.props.dispatch.showLoadingAction(false,'')
   }
   render(){
     const { loadingVisible, loadingText} = this.props.tradingManageReducer
-
-    console.log('loadingVisible444444=======',loadingVisible)
+    console.log('loadingText=====',loadingText)
     return(
         <Modal
           animationIn={'slideInUp'}
           animationOut={'slideOutDown'}
-          isVisible={loadingVisible} 
+          isVisible={this.props.visible} 
           onBackButtonPress={() => this.onPressClose()}
           style={[pubS.center,{flex:1,}]}
           backdropColor={'#fff'}

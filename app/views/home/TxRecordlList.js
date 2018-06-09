@@ -35,6 +35,7 @@ class TxRecordlList extends Component{
     this.state = {
       recordList: [],
       loadingVisible: false,
+      currentBalance: '0'
     }
      this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this))
   }
@@ -42,7 +43,8 @@ class TxRecordlList extends Component{
   componentWillMount(){
     StatusBar.setBarStyle('light-content',true)
     this.setState({
-      loadingVisible: true
+      loadingVisible: true,
+      currentBalance: this.props.etzBalance
     })
     this.getRecordList()  
      
@@ -72,32 +74,6 @@ class TxRecordlList extends Component{
     return true;
   }
 
-  // async updatePending(status,hash){
-
-  //   let tx = await web3.eth.getTransaction(hash)
-  //   let txBlock  = await web3.eth.getBlock(tx.blockNumber)
-  //    console.log('更新hash值',txBlock)
-  //   let block = txBlock.number
-  //   let time = txBlock.timestamp
-
-
-  //   let updateRes = await accountDB.updateTable({
-  //     sql: 'update trading set tx_result = ?,tx_time = ?,tx_hash = ?,tx_block_number = ? where tx_result = -1 ',
-  //     parame: [status,time,hash,block]
-  //   })
-  //   if(updateRes === 'success'){
-  //     console.log('updatePending成功')
-  //     this.getRecordList()
-  //   }else{
-  //     if(updateRes === 'fail'){
-  //        console.log('updatePending失败')
-  //       this.getRecordList()
-  //     }
-  //   }
-
-    
-  // }
-
   async getRecordList(){
     const { currentAccount } = this.props.accountManageReducer
     //根据当前账户(0x${currentAccount.address} = tx_sender)地址查找 交易记录
@@ -106,10 +82,29 @@ class TxRecordlList extends Component{
       sql: 'select * from trading where tx_sender = ? and tx_token = ? ORDER BY id DESC',//按id降序排列
       parame: [`0x${currentAccount.address}`,this.props.curToken]
     })
-    // console.log('selRes 3333333333',selRes)
+
+    if(this.props.curToken === 'ETZ'){
+      let balance = await web3.eth.getBalance(`0x${currentAccount.address}`)
+      let res = web3.utils.fromWei(balance,'ether')
+
+      this.setState({
+        currentBalance: `${res}`
+      })
+    }else{
+      let selToken = await accountDB.selectTable({
+        sql: 'select tk_number from token where account_addr = ? and tk_symbol = ?',//按id降序排列
+        parame: [currentAccount.address,this.props.curToken]
+      })
+      this.setState({
+        currentBalance: `${selToken[0].tk_number}`
+      })
+    }
+    
+
     this.setState({
       recordList: selRes,
-      loadingVisible: false
+      loadingVisible: false,
+      
     })
 
   }
@@ -159,10 +154,10 @@ class TxRecordlList extends Component{
   }
 
   ListHeaderComponent = () => {
-    const { etzBalance, etz2rmb } = this.props
+    const { etz2rmb } = this.props
       return(
         <View style={[styles.listViewStyle,pubS.center]}>
-          <Text style={pubS.font72_1}>{splitNumber(etzBalance)}</Text>
+          <Text style={pubS.font72_1}>{splitNumber(this.state.currentBalance)}</Text>
           {
             //<Text style={pubS.font26_3}>{this.props.currencySymbol}</Text>
           }
@@ -226,7 +221,6 @@ class TxRecordlList extends Component{
     console.log('交易列表',this.state.recordList)
     return(
       <View style={[styles.container,{backgroundColor:'#F5F7FB'}]}>
-        <LoadingModal />
         {
         // <Loading loadingVisible={false} loadingText={I18n.t('loading')}/>   
         }
@@ -239,26 +233,27 @@ class TxRecordlList extends Component{
           pressBack={this.onPressBack}
           marginTopValue={0}
         />
-        <View style={{marginBottom: scaleSize(146)}}> 
+        <View style={{marginBottom: scaleSize(216)}}>
           <FlatList
             keyExtractor={(item, index) => index.toString()}
             data={this.state.recordList}
             renderItem={this.renderItem}
             ListHeaderComponent={this.ListHeaderComponent}
             ListEmptyComponent={this.ListEmptyComponent}
-            // refreshControl={
-            //   <RefreshControl
-            //     refreshing={this.state.loadingVisible}
-            //     onRefresh={this.onRefreshList}
-            //     tintColor={"#144396"}
-            //     title={I18n.t('loading')}
-            //     colors={['#fff']}
-            //     progressBackgroundColor={"#1d53a6"}
-            //   />
-            // }
-          />          
-
+          // refreshControl={
+          //   <RefreshControl
+          //     refreshing={this.state.loadingVisible}
+          //     onRefresh={this.onRefreshList}
+          //     tintColor={"#144396"}
+          //     title={I18n.t('loading')}
+          //     colors={['#fff']}
+          //     progressBackgroundColor={"#1d53a6"}
+          //   />
+          // }
+        />   
         </View>
+               
+
         <View style={[styles.bottomBtnStyle,pubS.rowCenter]}>
           <TouchableOpacity activeOpacity={.7} onPress={this.payBtn} style={[styles.btnStyle,{backgroundColor:'#ffa93b'},pubS.center]}>
             <Text style={pubS.font30_3}>{I18n.t('send')}</Text>

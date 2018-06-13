@@ -39,7 +39,7 @@ class KeyStore extends Component{
     // let local = '{"version":3,"id":"962c6028-12c2-4f94-8662-3b3bea6d567e","address":"ec80a9fe89b05e337efa9c801c07c8444d9cb32e","crypto":{"ciphertext":"747c915f231a508735d9ebad6ab70bf379c30d52e78a964c6b396867ab5f5b8e","cipherparams":{"iv":"38fef4acfe68ad225f05d2afc5c22837"},"cipher":"aes-128-ctr","kdf":"scrypt","kdfparams":{"dklen":32,"salt":"c74436c3871b5959b1e5483a53fd7d1b37778840474f7b8c8298012a251e8888","n":8192,"r":8,"p":1},"mac":"6c1ca62cf63bc8a0098c46e007df429c93fad5155916fcf08d137af05a9c4e71"}}'
     // let bit = '{"version": 3,  "id": "8bb95fef-dcf3-4027-a9f3-dafd50d9f1cc",  "address": "a9f68706e0608e585b9df501a1e6ad2edfa5f0e5",  "crypto": {    "ciphertext": "c930eba836a40cc6f5e822240db1505e01678cf71988755e00d6c6f685be7ab1",    "cipherparams": {      "iv": "7b80875d6633123806879eec2c123561"    },    "cipher": "aes-128-ctr",    "kdf": "scrypt",    "kdfparams": {      "dklen": 32,      "salt": "dec114d80abc89d1b64101a43631e691cf355d2afb5ad2be2d48310637783ecb",      "n": 8192,      "r": 8,      "p": 1    },    "mac": "fe48046c93ffe22caedc5459176df4f334cbdf39c661ccecddf2374ebc40f9d4"  }}'
     // this.setState({
-    //   keystoreVal: bit
+    //   keystoreVal: local
     // })
   }
 
@@ -137,6 +137,7 @@ class KeyStore extends Component{
             value={userNameVal}
             onChangeText={this.onChangeUseNameText}
             warningText={userNameWarning}//
+            autoFocus={true}
           />
           <TextInputComponent
             isMultiline={true}

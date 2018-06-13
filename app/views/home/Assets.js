@@ -79,10 +79,11 @@ class Assets extends Component{
 
     })
 
-    this.getAllAccounts()
+    
   }
   componentDidMount(){
-    AppState.addEventListener('change', this._handleAppStateChange);
+    AppState.addEventListener('change', this._handleAppStateChange)
+    this.getAllAccounts()
   }
   onNavigatorEvent(event) {
     if (event.id === 'bottomTabSelected') {
@@ -226,18 +227,15 @@ class Assets extends Component{
 
     const { txEtzStatus,txEtzHash, txErrorMsg,txErrorOrder,txStateMark } = nextProps.tradingManageReducer
     if(this.props.tradingManageReducer.txEtzStatus !== txEtzStatus){
-      console.log('txEtzStatus9999999999999',txEtzStatus)
       if(txEtzStatus === 1){
-         
           //更新轉賬狀態
          Alert.alert(I18n.t('send_successful'))
          this.updatePending(1,txEtzHash,txStateMark)
          this.props.dispatch(resetTxStatusAction())
-         // setTimeout(() => {
-          this.props.dispatch(refreshTokenAction(this.state.curAddr,fetchTokenList))
-         // },1000)
+         this.props.dispatch(refreshTokenAction(this.state.curAddr,fetchTokenList))
          return
        }else if(txEtzStatus === 0){
+      
           if(Platform.OS === 'ios'){
             setTimeout(() => {
               Alert.alert(txErrorMsg)

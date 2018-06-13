@@ -8,6 +8,8 @@ import {
 	ActivityIndicator
 } from 'react-native'
 import { scaleSize,ifIphoneX } from '../../utils/adapter'
+import { NavHeader } from '../../components/'
+import I18n from 'react-native-i18n'
 export default class TxWebView extends Component{
 	renderLoading = () => {
 		return(
@@ -20,6 +22,10 @@ export default class TxWebView extends Component{
 	        </View> 
 		)
 	}
+	onPressBack = () => {
+	    this.props.navigator.pop()
+  	}
+
 	render(){
 		return(
 			<View style={{flex:1,}}>
@@ -27,7 +33,12 @@ export default class TxWebView extends Component{
 		          Platform.OS === 'ios' ?
 		          <StatusBar backgroundColor="#000000"  barStyle="dark-content" animated={true} />
 		          : null
-		        }				
+		        }	
+		        <NavHeader
+		          navTitle={I18n.t('tx_records_1')}
+		          pressBack={this.onPressBack}
+		          isAccount={false}
+		        />		
 				<WebView
 			        source={{uri:`https://explorer.etherzero.org/tx/${this.props.hash}`,method:'GET'}}
 					style={styles.WebViewStyle}

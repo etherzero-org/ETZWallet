@@ -34,7 +34,7 @@ public class MainApplication extends NavigationApplication {
           new RNCameraPackage(),
           new SQLitePluginPackage(),
           new RNI18nPackage(),
-          new RNDeviceInfo(),
+          new RNDeviceInfo()
         );
     }
 

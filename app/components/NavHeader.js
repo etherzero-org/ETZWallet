@@ -9,6 +9,7 @@ import {
 } from 'react-native'
 import {pubS} from '../styles/'
 import { scaleSize, setScaleText,isIphoneX } from '../utils/adapter'
+import I18n from 'react-native-i18n'
 export default class NavHeader extends Component {
 
 	static defaultProps = {
@@ -22,10 +23,15 @@ export default class NavHeader extends Component {
 		const { navTitle, pressBack, navBgColor, isAccount, toScan,navTitleColor, marginTopValue} = this.props
 		return(
 			<View style={[Platform.OS === 'ios' ? styles.ios_navbarStyle : styles.navbarStyle,pubS.rowCenterJus,{paddingLeft: scaleSize(15),paddingRight: scaleSize(15),backgroundColor: navBgColor,marginTop: marginTopValue}]}>
-	            <TouchableOpacity activeOpacity={.6} onPress={pressBack} style={pubS.rowCenter}>
-	              <Image source={require('../images/xhdpi/send_page_back_ios.png')}style={styles.navImgStyle}/>
+	            <TouchableOpacity activeOpacity={.6} onPress={pressBack} style={[pubS.rowCenter,{width:scaleSize(145)}]}>
+	              <Image source={Platform.OS === 'ios' ? require('../images/xhdpi/nav_ico_createaccount_back_def.png') : require('../images/xhdpi/send_page_back_ios.png')}style={styles.navImgStyle}/>
+	              {
+	              	Platform.OS === 'ios' ?
+	              	<Text style={{color:'#c4c7cc',fontSize: setScaleText(32)}}>{I18n.t('back')}</Text>
+	              	: null
+	              }
 	            </TouchableOpacity>
-	            <View style={{marginLeft: 50}}>
+	            <View style={{alignSelf:'center'}}>
 	              <Text style={{fontSize: setScaleText(32),color:navTitleColor}}>{navTitle}</Text>
 	            </View>
 	            {

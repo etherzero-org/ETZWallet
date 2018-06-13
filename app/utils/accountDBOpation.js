@@ -8,7 +8,7 @@ import I18n from 'react-native-i18n'
 import accountDB from '../db/account_db'
 import {  ethWallet,EthereumHDKey } from './ethWallet'
 import { fromV3,toLowerCaseKeys } from './fromV3'
-
+import { Alert } from 'react-native'
 async function onImportAccount(options){
 	const { importSuccess, importFailure, parames } = options
 
@@ -58,16 +58,16 @@ async function onImportAccount(options){
 
 				let keyStore1 = JSON.parse(keystoreVal)
 				let keyStore2 = toLowerCaseKeys(keyStore1)
-				let newWallet 
+				let ksPrivKey 
 				try{
-					newWallet = await fromV3(keyStore2,keystorePsd)//验证密码
+					ksPrivKey = await fromV3(keyStore2,keystorePsd)//验证密码
 				} catch (err){
 					importFailure(err) 
 					return
 				}
 
 				if(keyStore2.crypto.kdfparams.n > 8193){
-	          		let ksPrivKey = newWallet.privKey.toString('hex')
+	          		// let ksPrivKey = newWallet.privKey.toString('hex')
 	          		let buf = new Buffer(ksPrivKey, 'hex')
 					let wal = ethWallet.fromPrivateKey(buf)
 				    let ksKeystore3 = wal.toV3(keystorePsd,{c:8192,n:8192})
@@ -203,18 +203,35 @@ async function onCreateAccount(options){
 	
     let selected = 0 
 	// let mnemonic = await bip39.generateMnemonic();
- //    console.log('创建时生成的mnemonic==',mnemonic)
-    
-    let seed = await bip39.mnemonicToSeed(mnemonicValue)
-
-    let hdWallet = EthereumHDKey.fromMasterSeed(seed)
 
 
-    let w = hdWallet.getWallet()
+	let seed = bip39.mnemonicToSeed(mnemonicValue)
+ 
+	let hdWallet = hdkey.fromMasterSeed(seed)
 
-    let keyStore = w.toV3(psdVal,{c:8192,n:8192})
+	var key1 = hdWallet.derivePath("m/44'/60'/0'/0/0")
 
-    console.log('keyStore==',keyStore)
+	let privateKey = key1._hdkey._privateKey
+
+	const buf = Buffer.from(privateKey, 'hex');
+
+	let wal = wallet.fromPrivateKey(buf)
+
+	let keyStore = wal.toV3(psdVal,{c:8192,n:8192})
+
+	console.log('keystore====',keyStore)
+
+
+    // let seed = await bip39.mnemonicToSeed(mnemonicValue)
+
+    // let hdWallet = EthereumHDKey.fromMasterSeed(seed)
+
+
+    // let w = hdWallet.getWallet()
+
+    // let keyStore = w.toV3(psdVal,{c:8192,n:8192})
+
+    // console.log('keyStore==',keyStore)
 
     if(fromLogin === 'login'){
     	accountDB.createAmountTable()
@@ -340,9 +357,9 @@ async function onModifyPassword(options){
 	const { keys, oldPsd, newPsd, currentList,} = parames 
 	try {
 		//解密出私钥
-		const newWallet = await fromV3(keys,oldPsd)
-
-        let priv = newWallet.privKey.toString('hex')
+		let priv = await fromV3(keys,oldPsd)
+		console.log('私钥+新密码 算出新的keystore',priv)
+        // let priv = newWallet.privKey.toString('hex')
         //私钥+新密码 算出新的keystore
         let buf = new Buffer(priv, 'hex')
 		let wal = ethWallet.fromPrivateKey(buf)

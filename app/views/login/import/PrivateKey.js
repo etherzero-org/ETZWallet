@@ -18,6 +18,7 @@ import { toHome } from '../../../root'
 import { importAccountAction,resetDeleteStatusAction,showImportLoadingAction } from '../../../actions/accountManageAction'
 import { connect } from 'react-redux'
 import { Navigation } from 'react-native-navigation'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import I18n from 'react-native-i18n'
 class PrivateKey extends Component{
   constructor(props){
@@ -151,47 +152,55 @@ class PrivateKey extends Component{
         <ScrollView
           ref={'_scroll'}
         >
-          <TextInputComponent
-            placeholder={I18n.t('account_name')}
-            value={userNameVal}
-            onChangeText={this.onChangeUseNameText}
-            warningText={userNameWarning}//
-          />
-          <TextInputComponent
-            isMultiline={true}
-            placeholder={I18n.t('private_key')}
-            value={privKeyVal}
-            onChangeText={this.onChangePrivateText}
-            warningText={privKeyWarning}
-            iptMarginTop={scaleSize(60)}
-          />
-          <TextInputComponent
-            placeholder={I18n.t('password')}
-            value={psdVal}
-            onChangeText={this.onChangPsdText}
-            secureTextEntry={true}
-            warningText={psdWarning}
-            onFocus={this.onFocus}
-          />
-          <TextInputComponent
-            placeholder={I18n.t('repeat_password')}
-            value={repeadPsdVal}
-            onChangeText={this.onChangeRepeatText}
-            secureTextEntry={true}
-            warningText={rePsdWarning}
-          />
-                  
-          <TextInputComponent
-            placeholder={I18n.t('password_hint')}
-            value={hintValue}
-            onChangeText={this.onChangeHint}
-          />
-          <Btn
-            btnMarginTop={scaleSize(60)}
-            btnPress={this.onPressImport}
-            btnText={I18n.t('import')}
-            btnWidth={DEFULT_IPONEX}
-          />
+          <KeyboardAwareScrollView
+            style={{ backgroundColor: '#fff' }}
+            enableOnAndroid={true}
+            scrollToEnd={true}
+            enableResetScrollToCoords={true}
+          >
+            <TextInputComponent
+              placeholder={I18n.t('account_name')}
+              value={userNameVal}
+              onChangeText={this.onChangeUseNameText}
+              warningText={userNameWarning}//
+              autoFocus={true}
+            />
+            <TextInputComponent
+              isMultiline={true}
+              placeholder={I18n.t('private_key')}
+              value={privKeyVal}
+              onChangeText={this.onChangePrivateText}
+              warningText={privKeyWarning}
+              iptMarginTop={scaleSize(60)}
+            />
+            <TextInputComponent
+              placeholder={I18n.t('password')}
+              value={psdVal}
+              onChangeText={this.onChangPsdText}
+              secureTextEntry={true}
+              warningText={psdWarning}
+              onFocus={this.onFocus}
+            />
+            <TextInputComponent
+              placeholder={I18n.t('repeat_password')}
+              value={repeadPsdVal}
+              onChangeText={this.onChangeRepeatText}
+              secureTextEntry={true}
+              warningText={rePsdWarning}
+            />
+                    
+            <TextInputComponent
+              placeholder={I18n.t('password_hint')}
+              value={hintValue}
+              onChangeText={this.onChangeHint}
+            />
+            <Btn
+              btnMarginTop={scaleSize(60)}
+              btnPress={this.onPressImport}
+              btnText={I18n.t('import')}
+              btnWidth={DEFULT_IPONEX}
+            />
+          </KeyboardAwareScrollView>
         </ScrollView>
       </View>
     )

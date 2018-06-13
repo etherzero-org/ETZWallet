@@ -17,6 +17,11 @@ const initState = {
 
   txSuccessUpdate: false,
   txetzpassworderror: '',
+
+  insertDBisToken: -1,
+
+  txPassword: '',
+  txPassProps: {}
 }
 export default function tradingManageReducer (state = initState,action) {
 	switch(action.type){
@@ -81,7 +86,6 @@ const onUpdateTxList = (state,action) => {
 }
 const onShowLoading = (state,action) => {
   const { visible,text } = action.payload
-  console.log('reducer visible111111111',visible)
   return {
     ...state,
     loadingVisible: visible,
@@ -98,6 +102,8 @@ const txReset = (state,action) => {
     saveRecordSuc: false,
     txSuccessUpdate: false,
     txetzpassworderror: '',
+    insertDBisToken: -1,
+    txPassword: '',
   }
 }
 
@@ -130,8 +136,6 @@ const txETZSuc = (state,action) => {
 }
 const txETZFail = (state,action) => {
   const { faildata,msg,order,mark } = action.payload
-  console.log('pendingMark55555 txETZFail',mark)
-  console.log('hash222222222',faildata)
   return {
     ...state,
     txEtzStatus: 0,
@@ -145,15 +149,15 @@ const txETZFail = (state,action) => {
 
 
 const saveSuc = (state,action) => {
-  const { sucdata, insertMark,isToken } = action.payload
-  console.log('交易----插入数据库成功 的insertMark',insertMark)
-  console.log('pendingTxList=====',state.pendingTxList)
+  const { sucdata, insertMark,isToken,txPassword,data } = action.payload
   let newState = Object.assign({},state)
   newState.pendingTxList.push(insertMark)
-  console.log('newState.pendingTxList====',newState.pendingTxList)
   return {
     ...newState,
-    saveRecordSuc: isToken ? false : true,
+    saveRecordSuc: true,
+    insertDBisToken: isToken,
+    txPassword,
+    txPassProps: data,
   }
 }
 const saveFail = (state,action) => {

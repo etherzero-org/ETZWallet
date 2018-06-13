@@ -44,7 +44,7 @@ class Receive extends Component{
 
   }
 
-  componentWillMount(){
+  componentDidMount(){
 
     const { currentAccount,backupModalTimes } = this.props.accountManageReducer
 
@@ -175,14 +175,14 @@ class Receive extends Component{
         currentAccountId: currentAccount.id,
         psdPrompt: currentAccount.password_promp || ''
       },
-      navigatorButtons: {
-        rightButtons: [
-          {
-            title: 'Save',
-            id: 'save_change'
-          }
-        ]
-      }
+      // navigatorButtons: {
+      //   rightButtons: [
+      //     {
+      //       title: 'Save',
+      //       id: 'save_change'
+      //     }
+      //   ]
+      // }
     })
   }
 
@@ -225,11 +225,11 @@ class Receive extends Component{
         isVisible={visible}
         onBackButtonPress={this.onHide}
         onBackdropPress={this.onHide}
-        style={[styles.modalView,{height: modalView_height,width: modalView_width,top: modalView_top}]}
+        style={[styles.modalView,{height: modalView_height+ scaleSize(75),width: modalView_width,top: modalView_top}]}
         backdropOpacity={.8}
       >
         <Image source={require('../../images/xhdpi/img_collectionnobackup.png')} style={[styles.modalImageStyle,{ left: (modalView_width-scaleSize(107))/2,}]}/>
-        <View style={[{alignItems:'center'}]}>
+        <View style={[{alignItems:'center',}]}>
           <View style={[styles.blueView,{height: blueView_height,paddingLeft: blueView_padding,paddingRight: blueView_padding}]}>
               <Text style={[pubS.font36_3,{marginTop: scaleSize(32),textAlign:'center'}]}>{I18n.t('backup_first')}</Text>
               <Text style={[pubS.font22_2,{marginTop: scaleSize(13),width: '100%',textAlign:'center'}]}>{I18n.t('backup_modal_1')}</Text>
@@ -248,6 +248,9 @@ class Receive extends Component{
               </TouchableOpacity>
           </View>
         </View>
+        <TouchableOpacity activeOpacity={.7} onPress={this.onHide} style={[styles.closeViewStyle,pubS.center]}>
+          <Image source={require('../../images/xhdpi/btn_ico_collectionnobackup_close_def.png')} style={{height: scaleSize(44),height: scaleSize(44)}}/>
+        </TouchableOpacity>
       </Modal>
       </View>
     )
@@ -261,7 +264,16 @@ const styles = StyleSheet.create({
     zIndex:999,
     position:'absolute',
     top:0,
-   
+  },
+  closeViewStyle: {
+    height: scaleSize(75),
+    width: scaleSize(75),
+    zIndex:999,
+    position:'absolute',
+    bottom:0,
+    alignSelf:'center'
+    // borderColor:'red',
+    // borderWidth:1,
   },
   backupBtnStyle:{
       
@@ -283,7 +295,7 @@ const styles = StyleSheet.create({
     alignItems:'center',
     borderTopLeftRadius: scaleSize(10),
     borderTopRightRadius: scaleSize(10),
-    marginTop: scaleSize(84),
+    // marginTop: scaleSize(84),
   },
   modalView:{
     position: 'absolute',

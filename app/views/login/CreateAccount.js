@@ -18,6 +18,7 @@ import { setScaleText, scaleSize } from '../../utils/adapter'
 import { TextInputComponent,Btn,Loading } from '../../components/'
 import { connect } from 'react-redux'
 import { createAccountAction,genMnemonicAction } from '../../actions/accountManageAction'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 import I18n from 'react-native-i18n'
 class CreateAccount extends Component{
@@ -41,9 +42,6 @@ class CreateAccount extends Component{
         keyStoreAddress: '',
         second: 0
       }
-      
-      this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this.onFocus.bind(this));
-
   }
 
   componentWillReceiveProps(nextProps){
@@ -67,9 +65,6 @@ class CreateAccount extends Component{
 
   }
  
-  componentWillUnmount () {
-    this.keyboardDidShowListener.remove();
-  }
   onChangeUserNameText = (val) => {
     this.setState({
       userNameVal: val,
@@ -140,10 +135,6 @@ class CreateAccount extends Component{
       promptVal: val,
     })
   }
-  onFocus = () => {
-    this.refs._scrollview.scrollToEnd({animated: true})
-    
-  }
   render(){
     const { userNameVal, psdVal, repeadPsdVal, promptVal, userNameWarning, psdWarning, rePsdWarning,visible } = this.state
     const { isLoading } = this.props.accountManageReducer
@@ -156,44 +147,51 @@ class CreateAccount extends Component{
         }
         <Loading loadingVisible={this.state.visible} loadingText={I18n.t('creating')}/>
         <ScrollView
-          ref={'_scrollview'}
+
         >
-          <View style={[styles.warningView,pubS.paddingRow_24]}>
-            <Text style={pubS.font22_1}>{I18n.t('create_account_prompt')}</Text>
-          </View>
-          <View style={{paddingTop:10,}}>
-            <TextInputComponent
-              placeholder={I18n.t('account_name')}
-              value={userNameVal}
-              onChangeText={this.onChangeUserNameText}
-              warningText={userNameWarning}
-              // onFocus={this.onFocus}
-            />
-            <TextInputComponent
-              placeholder={I18n.t('password')}
-              value={psdVal}
-              onChangeText={this.onChangPsdText}
-              secureTextEntry={true}
-              warningText={psdWarning}
-            />
-            <TextInputComponent
-              placeholder={I18n.t('repeat_password')}
-              value={repeadPsdVal}
-              onChangeText={this.onChangeRepeatText}
-              secureTextEntry={true}
-              warningText={rePsdWarning}
-            />
-            <TextInputComponent
-              placeholder={I18n.t('password_hint')}
-              value={promptVal}
-              onChangeText={this.onChangePromptText}
-            />
-            <Btn
-              btnMarginTop={scaleSize(60)}
-              btnPress={this.onPressBtn}
-              btnText={I18n.t('create')}
-            />
-          </View>
+          <KeyboardAwareScrollView
+            style={{ backgroundColor: '#fff' }}
+            enableOnAndroid={true}
+            scrollToEnd={true}
+            enableResetScrollToCoords={true}
+          >
+            <View style={[styles.warningView,pubS.paddingRow_24]}>
+              <Text style={pubS.font22_1}>{I18n.t('create_account_prompt')}</Text>
+            </View>
+            <View style={{paddingTop:10,}}>
+              <TextInputComponent
+                placeholder={I18n.t('account_name')}
+                value={userNameVal}
+                onChangeText={this.onChangeUserNameText}
+                warningText={userNameWarning}
+                autoFocus={true}
+              />
+              <TextInputComponent
+                placeholder={I18n.t('password')}
+                value={psdVal}
+                onChangeText={this.onChangPsdText}
+                secureTextEntry={true}
+                warningText={psdWarning}
+              />
+              <TextInputComponent
+                placeholder={I18n.t('repeat_password')}
+                value={repeadPsdVal}
+                onChangeText={this.onChangeRepeatText}
+                secureTextEntry={true}
+                warningText={rePsdWarning}
+              />
+              <TextInputComponent
+                placeholder={I18n.t('password_hint')}
+                value={promptVal}
+                onChangeText={this.onChangePromptText}
+              />
+              <Btn
+                btnMarginTop={scaleSize(60)}
+                btnPress={this.onPressBtn}
+                btnText={I18n.t('create')}
+              />
+            </View>
+          </KeyboardAwareScrollView>
         </ScrollView>
         
       </View>

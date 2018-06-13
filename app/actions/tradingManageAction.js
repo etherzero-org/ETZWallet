@@ -12,7 +12,9 @@ const insert2TradingDBAction = (data) => {
 			payload: {
 				sucdata,
 				insertMark: data.tx_random,
-				isToken: data.isToken
+				isToken: data.isToken,
+				txPassword: data.txPassword,
+				data,
 			}
 		}
 	}
@@ -43,7 +45,6 @@ const makeTxByETZAction = (info) => {
 		}
 	}
 	const suc = (sucdata,mark) => {
-		console.log('转账成功返回的额数据sucdata',sucdata)
 		return {
 			type: types.MAKE_TX_BY_ETZ_SUC,
 			payload: {
@@ -63,14 +64,6 @@ const makeTxByETZAction = (info) => {
 			}
 		}
 	}
-	// const psdErr = (msg) => {
-	// 	return {
-	// 		type: types.TX_ETZ_PSD_ERROR,
-	// 		payload:{
-	// 			msg
-	// 		}
-	// 	}
-	// }
 	return(dispatch,getState) => {
 		dispatch(start()),
 
@@ -78,7 +71,6 @@ const makeTxByETZAction = (info) => {
 			parames: {
 				info
 			},
-			// txETZPsdErr: (msg) => {dispatch(psdErr(msg))},
 			txETZSuccess: (sucdata1,sucdata2) => {dispatch(suc(sucdata1,sucdata2))},
 			txETZFail: (faildata,msg,order,mark) => {dispatch(fail(faildata,msg,order,mark))}
 		})
@@ -137,7 +129,6 @@ const resetTxStatusAction = () => {
 	}
 }
 const showLoadingAction = (visible,text) => {
-	console.log('action visible111111111',visible)
 	const show = () => {
 		return {
 			type: types.SHOW_LOADING,

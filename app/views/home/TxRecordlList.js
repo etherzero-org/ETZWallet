@@ -22,7 +22,6 @@ import I18n from 'react-native-i18n'
 import { connect } from 'react-redux'
 import accountDB from '../../db/account_db'
 import {Loading,NavHeader,LoadingModal } from '../../components/'
-
 const MyStatusBar = ({backgroundColor, ...props}) => (
   <View style={[styles.statusBar, { backgroundColor }]}>
     <StatusBar translucent backgroundColor={backgroundColor} {...props} />
@@ -41,7 +40,6 @@ class TxRecordlList extends Component{
   }
 
   componentWillMount(){
-    StatusBar.setBarStyle('light-content',true)
     this.setState({
       loadingVisible: true,
       currentBalance: this.props.etzBalance
@@ -113,7 +111,12 @@ class TxRecordlList extends Component{
     this.props.navigator.push({
       screen: 'trading_record_detail',
       title:I18n.t('tx_records_1'),
-      navigatorStyle: MainThemeNavColor,
+      // navigatorStyle: MainThemeNavColor,
+      navigatorStyle: Object.assign({},DetailNavigatorStyle,{
+          navBarHidden: true,
+          statusBarColor:'#144396',
+          statusBarTextColorScheme:'light'
+      }),
       backButtonTitle:I18n.t('back'),
       backButtonHidden:false,
       passProps: {
@@ -180,7 +183,7 @@ class TxRecordlList extends Component{
       passProps:{
         curToken: this.props.curToken,
         curDecimals:this.props.curDecimals,
-        // currencySymbol: this.state.currencySymbol,
+        currencySymbol: this.props.currencySymbol,
       }
     })
   }
@@ -218,7 +221,6 @@ class TxRecordlList extends Component{
     })
   }
   render(){
-    console.log('交易列表',this.state.recordList)
     return(
       <View style={[styles.container,{backgroundColor:'#F5F7FB'}]}>
         {

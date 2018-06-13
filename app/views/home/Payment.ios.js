@@ -9,7 +9,8 @@ import {
   Alert,
   Platform,
   Keyboard,
-  StatusBar
+  StatusBar,
+  TouchableHighlight
 } from 'react-native'
 
 
@@ -26,10 +27,11 @@ import { passReceiveAddressAction } from '../../actions/accountManageAction'
 import { contractAbi } from '../../utils/contractAbi'
 import I18n from 'react-native-i18n'
 import { getTokenGas, getGeneralGas } from '../../utils/getGas'
-import { fromV3 } from '../../utils/fromV3'
 import {splitDecimal } from '../../utils/splitNumber'
 import InputScrollView from 'react-native-input-scroll-view';
 import accountDB from '../../db/account_db'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+
 const EthUtil = require('ethereumjs-util')
 const Wallet = require('ethereumjs-wallet')
 const EthereumTx = require('ethereumjs-tx')
@@ -59,8 +61,6 @@ class Payment extends Component{
       currentTokenName: 'ETZ',
       isToken: false,
       currentTokenDecimals: 0,
-      // loadingVisible: false,
-      loadingText: '',
       gasValue: '',
       currentAccountName: '',
       currentTokenAddress: '',
@@ -74,7 +74,6 @@ class Payment extends Component{
 
 
   componentWillMount(){
-
     const { fetchTokenList } = this.props.tokenManageReducer 
 
     const { currentAccount } = this.props.accountManageReducer
@@ -198,22 +197,79 @@ class Payment extends Component{
     }
 
 
-    const { saveRecordSuc,pendingTxList } = nextProps.tradingManageReducer
+    const { saveRecordSuc,pendingTxList,insertDBisToken,txPassword,txPassProps } = nextProps.tradingManageReducer
 
     
 
     //插入数据库成功 开始发送交易action
-    this.sendTxAction(saveRecordSuc, pendingTxList)
-    
+    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue, } = this.state
+    const { fetchTokenList,etzBalance, } = this.props.tokenManageReducer 
 
-    // if(this.props.tradingManageReducer.txetzpassworderror !== nextProps.tradingManageReducer.txetzpassworderror && nextProps.tradingManageReducer.txetzpassworderror.length > 0){
-    //   Alert.alert('密码错啦')
-    //   this.props.dispatch(resetTxStatusAction())
-    //   return
-    // }else{
-      
-    //   this.props.dispatch(resetTxStatusAction())
-    // }
+    if(this.props.tradingManageReducer.saveRecordSuc !== saveRecordSuc && saveRecordSuc){
+      if(insertDBisToken === 0){
+        //插入数据库成功
+        console.log('开始发送交易222222')
+
+        setTimeout(() => {
+          this.props.dispatch(showLoadingAction(false,''))
+        
+          this.props.navigator.push({
+            screen: 'tx_record_list',
+            title: this.state.currentTokenName,
+            backButtonTitle:I18n.t('back'),
+            backButtonHidden:false,
+            navigatorStyle: Object.assign({},DetailNavigatorStyle,{
+              navBarHidden: true,
+              navBarTextColor:'#fff',
+              navBarBackgroundColor:'#144396',
+              statusBarColor:'#144396',
+              statusBarTextColorScheme:'light'
+            }),
+            passProps:{
+              etzBalance: splitDecimal(this.state.currentAssetValue),//etz或者代币资产金额
+              etz2rmb: 0,
+              curToken: this.state.currentTokenName,//token缩写  etz即ETZ
+              // currencySymbol: this.props.currencySymbol,//  货币符号
+              curDecimals: this.props.curDecimals,//小数点位数
+            }
+          })
+        },1000)
+
+        setTimeout(() => {
+          if(this.state.currentTokenName === 'ETZ'){
+            console.log('txPassProps=====',txPassProps)
+            this.props.dispatch(makeTxByETZAction({
+              txPsdVal:txPassword,
+              senderAddress: txPassProps.tx_sender.slice(2,),
+              txValue: txPassProps.tx_value,
+              receiverAddress: txPassProps.tx_receiver,
+              noteVal: txPassProps.tx_note,
+              gasValue: txPassProps.gasValue,
+              fetchTokenList,
+              keyStore: this.state.keyStore,
+              pendingMark: pendingTxList[pendingTxList.length-1]
+            }))
+          }else{
+            this.props.dispatch(makeTxByTokenAction({
+              txPsdVal:txPassword,
+              senderAddress: txPassProps.tx_sender.slice(2,),
+              txValue: txPassProps.tx_value,
+              receiverAddress: txPassProps.tx_receiver.slice(2,),
+              noteVal: txPassProps.tx_note,
+              gasValue: txPassProps.gasValue,
+              fetchTokenList,
+              currentTokenDecimals: this.state.currentTokenDecimals,
+              currentTokenAddress: this.state.currentTokenAddress,
+              currentTokenName: this.state.currentTokenName,
+              keyStore: this.state.keyStore,
+              pendingMark: pendingTxList[pendingTxList.length-1]
+            }))
+          }
+        },1500)
+
+        this.props.dispatch(resetTxStatusAction())
+      }
+    }
 
   }
   _keyboardDidShow(e){
@@ -224,73 +280,7 @@ class Payment extends Component{
   _keyboardDidHide(){
 
   }
-  sendTxAction(saveRecordSuc, pendingTxList){
-    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue, } = this.state
-    const { fetchTokenList,etzBalance } = this.props.tokenManageReducer 
-    if(this.props.tradingManageReducer.saveRecordSuc !== saveRecordSuc && saveRecordSuc){
-      //插入数据库成功
-      console.log('插入数据库成功')
-      // this.setState({
-      //   loadingVisible: false
-      // })
 
-      
-      
-
-      if(this.state.currentTokenName === 'ETZ'){
-        this.props.dispatch(makeTxByETZAction({
-          txPsdVal,
-          senderAddress,
-          txValue,
-          receiverAddress,
-          noteVal,
-          gasValue,
-          fetchTokenList,
-          keyStore: this.state.keyStore,
-          pendingMark: pendingTxList[pendingTxList.length-1]
-        }))
-      }else{
-        this.props.dispatch(makeTxByTokenAction({
-          txPsdVal,
-          senderAddress,
-          txValue,
-          receiverAddress,
-          noteVal,
-          gasValue,
-          fetchTokenList,
-          currentTokenDecimals: this.state.currentTokenDecimals,
-          currentTokenAddress: this.state.currentTokenAddress,
-          currentTokenName: this.state.currentTokenName,
-          keyStore: this.state.keyStore,
-          pendingMark: pendingTxList[pendingTxList.length-1]
-        }))
-      }
-
-      setTimeout(() => {
-        this.props.dispatch(showLoadingAction(false,''))
-        this.props.navigator.push({
-          screen: 'tx_record_list',
-          title: this.state.currentTokenName,
-          backButtonTitle:I18n.t('back'),
-          backButtonHidden:false,
-          navigatorStyle: Object.assign({},DetailNavigatorStyle,{
-            navBarHidden: true,
-            navBarTextColor:'#fff',
-            navBarBackgroundColor:'#144396',
-            statusBarColor:'#144396',
-            statusBarTextColorScheme:'light'
-          }),
-          passProps:{
-            etzBalance: splitDecimal(this.state.currentAssetValue),//etz或者代币资产金额
-            etz2rmb: 0,
-            curToken: this.state.currentTokenName,//token缩写  etz即ETZ
-            // currencySymbol: this.props.currencySymbol,//  货币符号
-            curDecimals: this.props.curDecimals,//小数点位数
-          }
-        })
-      },1000)
-    }
-  }
   componentWillUnmount(){
     this.onPressClose()
     this.keyboardDidShowListener.remove();
@@ -417,14 +407,13 @@ class Payment extends Component{
   showTokenPicker = () => {
     Picker.show()
   }
+
   onPressClose = () => {
     Keyboard.dismiss()
     this.setState({
       visible: false,
       modalSetp1: true,
       txPsdVal: '',
-      loadingText: '',
-      // loadingVisible: false,
     })
   }
 
@@ -454,19 +443,14 @@ class Payment extends Component{
     if(txPsdVal.length === 0){
       this.setState({
         txPsdWarning: I18n.t('input_password'),
-        loadingText: '',
       })
       return
     }else{
       this.props.dispatch(showLoadingAction(true,I18n.t('sending')))
       this.setState({
-        // loadingText: I18n.t('sending'),
         visible: false,
-        modalSetp1: true,
+        modalSetp1: true, 
       })
-
-      
-
       this.validatPsd()
     }
   }
@@ -483,8 +467,6 @@ class Payment extends Component{
         modalSetp1: true,
         txPsdVal: '',
         txPsdWarning: I18n.t('password_is_wrong'),
-        loadingText: '',
-        // loadingVisible: false,
       })
     }
   }
@@ -503,7 +485,10 @@ class Payment extends Component{
           tx_token: "ETZ",
           tx_result: -1,
           currentAccountName: `0x${senderAddress}`,
-          tx_random:  Math.round(Math.random() * 10000)
+          tx_random:  Math.round(Math.random() * 10000),
+          isToken: 0,
+          txPassword: this.state.txPsdVal,
+          gasValue: this.state.gasValue
         }))
       }else{
         // this.makeTransactByToken()
@@ -518,7 +503,10 @@ class Payment extends Component{
           tx_token: currentTokenName,
           tx_result: -1,
           currentAccountName: `0x${senderAddress}`,
-          tx_random:  tokenRandom
+          tx_random:  tokenRandom,
+          isToken: 0,
+          txPassword: this.state.txPsdVal,
+          gasValue: this.state.gasValue
         }))
         this.props.dispatch(insert2TradingDBAction({
           tx_hash: '',
@@ -530,7 +518,9 @@ class Payment extends Component{
           tx_result: -1,
           currentAccountName: `0x${senderAddress}`,
           tx_random:  tokenRandom,
-          isToken: true//这条是代币插入
+          isToken: 1,//这条是代币插入
+          txPassword: this.state.txPsdVal,
+          gasValue: this.state.gasValue
         }))
       }
   }
@@ -556,114 +546,119 @@ class Payment extends Component{
     return(
       <View style={pubS.container}>
         <StatusBar backgroundColor="#000000"  barStyle="dark-content" animated={true} />
-        <LoadingModal/>  
+        <LoadingModal />  
         <NavHeader
           navTitle={I18n.t('send')}
           pressBack={this.onPressBack}
           toScan={this.toScan}
-        />
-          
-        
-          <TextInputComponent
-            value ={currentTokenName}
-            editable={false}
-            toMore={true}
-            touchable={true}
-            onPressTouch={this.showTokenPicker}
-          />
-          <TextInputComponent
-            placeholder={I18n.t('receiver_address')}
-            value={receiverAddress}
-            onChangeText={this.onChangeToAddr}
-            warningText={txAddrWarning}
-            //isScan={true}
-            //onPressIptRight={this.toScan}
-          />
-          <TextInputComponent
-            placeholder={I18n.t('amount')}
-            value={txValue}
-            onChangeText={this.onChangeTxValue}
-            warningText={txValueWarning}
-            keyboardType={'numeric'}
-            //amount={splitDecimal(this.state.currentAssetValue)} 
-          />
-          <TextInputComponent 
-            placeholder={I18n.t('note_1')}
-            value={noteVal}
-            onChangeText={this.onChangeNoteText}
-          />
-          <View style={[styles.gasViewStyle,pubS.rowCenterJus]}>
-            <Text style={{color:'#C7CACF',fontSize: setScaleText(26)}}>Gas:</Text>
-            <Text>{gasValue}</Text>
-          </View>
-
-        <Btn
-          btnMarginTop={scaleSize(60)}
-          btnPress={this.onNextStep}
-          btnText={I18n.t('next')}
-        />
-        {
-          <Modal
-            isVisible={visible}
-            onBackButtonPress={this.onPressClose}
-            onBackdropPress={this.onPressClose}
-            style={styles.modalView}
-            backdropOpacity={.8}
+        />   
+        <ScrollView>
+          <KeyboardAwareScrollView
+            style={{ backgroundColor: '#fff' }}
+            enableOnAndroid={true}
+            scrollToEnd={true}
+            enableResetScrollToCoords={true}
           >
-            <View style={[styles.modalView,{marginBottom: modalSetp1 ? 0 : 10}]}>
-              <View style={[styles.modalTitle,pubS.center]}>
-                <TouchableOpacity onPress={this.onPressCloseIcon} activeOpacity={.7} style={styles.modalClose}>
-                  <Image source={modalTitleIcon} style={{height: scaleSize(30),width: scaleSize(30)}}/>
-                </TouchableOpacity>
-                <Text style={pubS.font26_4}>{modalTitleText}</Text>
-              </View>
-              {
-                modalSetp1 ?
-                <View>
-                  <RowText
-                    rowTitle={I18n.t('order_note')}
-                    rowContent={noteVal}
-                  />
-                  <RowText
-                    rowTitle={I18n.t('to_address')}
-                    rowContent={receiverAddress}
-                  />
-                  <RowText
-                    rowTitle={I18n.t('from_address')}
-                    rowContent={`0x${senderAddress}`}
-                  />
-                  <RowText
-                    rowTitle={I18n.t('amount_1')}
-                    rowContent={txValue}
-                    rowUnit={currentTokenName}
-                  />
-
-                  <Btn
-                    btnPress={this.onPressOrderModalBtn}
-                    btnText={I18n.t('confirm')}
-                    btnMarginTop={scaleSize(50)}
-                  />
-                </View>
-                :
-                <View>
-                  <TextInputComponent
-                    placeholder={I18n.t('password')}
-                    value={txPsdVal}
-                    onChangeText={this.onChangePayPsdText}
-                    warningText={txPsdWarning}
-                    secureTextEntry={true}
-                    autoFocus={true}
-                  />
-                  <Btn
-                    btnPress={this.onPressPayBtn}
-                    btnText={I18n.t('make_send')}
-                    btnMarginTop={scaleSize(50)}
-                  />
-                </View>
-              }
+            <TextInputComponent
+              value ={currentTokenName}
+              editable={false}
+              toMore={true}
+              touchable={true}
+              onPressTouch={this.showTokenPicker}
+            />
+            <TextInputComponent
+              placeholder={I18n.t('receiver_address')}
+              value={receiverAddress}
+              onChangeText={this.onChangeToAddr}
+              warningText={txAddrWarning}
+              autoFocus={true}
+            />
+            <TextInputComponent
+              placeholder={I18n.t('amount')}
+              value={txValue}
+              onChangeText={this.onChangeTxValue}
+              warningText={txValueWarning}
+              keyboardType={'numeric'}
+              //amount={splitDecimal(this.state.currentAssetValue)} 
+            />
+            <TextInputComponent 
+              placeholder={I18n.t('note_1')}
+              value={noteVal}
+              onChangeText={this.onChangeNoteText}
+            />
+            <View style={[styles.gasViewStyle,pubS.rowCenterJus]}>
+              <Text style={{color:'#C7CACF',fontSize: setScaleText(26)}}>Gas:</Text>
+              <Text>{gasValue}</Text>
             </View>
-          </Modal>
-        }
+            <Btn
+              btnMarginTop={scaleSize(60)}
+              btnPress={this.onNextStep}
+              btnText={I18n.t('next')}
+            />
+            {
+              <Modal
+                isVisible={visible}
+                onBackButtonPress={this.onPressClose}
+                onBackdropPress={this.onPressClose}
+                style={styles.modalView}
+                backdropOpacity={.8}
+              >
+                <View style={[styles.modalView,{marginBottom: modalSetp1 ? 0 : 10}]}>
+                  <View style={[styles.modalTitle,pubS.center]}>
+                    <TouchableOpacity onPress={this.onPressCloseIcon} activeOpacity={.7} style={styles.modalClose}>
+                      <Image source={modalTitleIcon} style={{height: scaleSize(30),width: scaleSize(30)}}/>
+                    </TouchableOpacity>
+                    <Text style={pubS.font26_4}>{modalTitleText}</Text>
+                  </View>
+                  {
+                    modalSetp1 ?
+                    <View>
+                      <RowText
+                        rowTitle={I18n.t('order_note')}
+                        rowContent={noteVal}
+                      />
+                      <RowText
+                        rowTitle={I18n.t('to_address')}
+                        rowContent={receiverAddress}
+                      />
+                      <RowText
+                        rowTitle={I18n.t('from_address')}
+                        rowContent={`0x${senderAddress}`}
+                      />
+                      <RowText
+                        rowTitle={I18n.t('amount_1')}
+                        rowContent={txValue}
+                        rowUnit={currentTokenName}
+                      />
+
+                      <Btn
+                        btnPress={this.onPressOrderModalBtn}
+                        btnText={I18n.t('confirm')}
+                        btnMarginTop={scaleSize(50)}
+                      />
+                    </View>
+                    :
+                    <View>
+                      <TextInputComponent
+                        placeholder={I18n.t('password')}
+                        value={txPsdVal}
+                        onChangeText={this.onChangePayPsdText}
+                        warningText={txPsdWarning}
+                        secureTextEntry={true}
+                        autoFocus={true}
+                      />
+                      <Btn
+                        btnPress={this.onPressPayBtn}
+                        btnText={I18n.t('make_send')}
+                        btnMarginTop={scaleSize(50)}
+                      />
+                    </View>
+                  }
+                </View>
+              </Modal>
+            }
+          </KeyboardAwareScrollView>
+        </ScrollView>   
           
         
          

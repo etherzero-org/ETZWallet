@@ -14,8 +14,14 @@ const initState = {
 
 export default function tokenManageReducer(state=initState,action){
 	switch(action.type){
+		case types.DELETE_TOKEN_LIST_START:
+			return onDelSelectedStart(state,action)
+			break
 		case types.DELETE_TOKEN_LIST:
 			return onDelSelected(state,action)
+			break
+		case types.ADD_TOKEN_LIST_START:
+			return onAddSelectedStart(state,action)
 			break
 		case types.ADD_TOKEN_LIST:
 			return onAddSelected(state,action)
@@ -80,7 +86,8 @@ const onInitSelectedList = (state,action) => {
 		fetchTokenList: data
 	}
 }
-const onDelSelected = (state,action) => {
+
+const onDelSelectedStart = (state,action) => {
 	const { delAddr,curaddr } = action.payload
 
 	let newState = Object.assign({},state)
@@ -90,11 +97,13 @@ const onDelSelected = (state,action) => {
 			newState.fetchTokenList[idx].tk_selected = 0
 		}
 	})
-		
-
+	
 	return newState
 }
-const onAddSelected = (state,action) => {
+const onDelSelected = (state,action) => {
+	return state
+}
+const onAddSelectedStart = (state,action) => {
 	const { addAddr,curaddr } = action.payload
 
 	let newState = Object.assign({},state)
@@ -106,6 +115,10 @@ const onAddSelected = (state,action) => {
 		}
 	})
 	return newState
+}
+
+const onAddSelected = (state,action) => {
+	return state
 }
 
 const globalToken = (state,action) => {

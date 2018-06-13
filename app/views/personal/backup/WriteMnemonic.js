@@ -23,22 +23,13 @@ class WriteMnemonic extends Component{
 		}
 	}
 	componentWillMount(){
-    	// this.setState({
-    	// 	mnemonicText: this.props.localMnemonic.split(" "),
-	    //     originMneStr: this.props.localMnemonic    		
-    	// })
+    	console.log("写下主几次",this.props.mnemonicValue)
     	this.setState({
     		mnemonicText: this.props.mnemonicValue.split(" "),
     		originMneStr: this.props.mnemonicValue
     	})
 	}
-	componentWillReceiveProps(nextProps){
-		// if(this.props.accountManageReducer.delMnemonicSuc !== nextProps.accountManageReducer.delMnemonicSuc && nextProps.accountManageReducer.delMnemonicSuc){
-	 //      this.setState({
-	 //        touchable: false
-	 //      })
-	 //    }
-	}
+	
 	onNextStep = () => {
 		const { originMneStr } = this.state
 		this.props.navigator.push({
@@ -59,7 +50,7 @@ class WriteMnemonic extends Component{
 	      	<Text style={[pubS.font34_1,{marginTop: scaleSize(60)}]}>{I18n.t('write_down_mnemonic')}</Text>
 	      	<Text style={[pubS.font24_2,{textAlign :'center',marginTop: scaleSize(20)}]}>{I18n.t('safe_place_mnemonic')}</Text>
 	      	<View style={[styles.mneViewStyle,pubS.center]}>
-	      		<View style={[{width: scaleSize(600),flexDirection:'row',flexWrap: 'wrap',}]}>
+	      		<View style={[{width: scaleSize(600),flexDirection:'row',flexWrap: 'wrap',paddingTop: scaleSize(20),paddingBottom: scaleSize(20)}]}>
 		      		{
 		      			this.state.mnemonicText.map((val,index) => {
 		      				return(

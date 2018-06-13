@@ -32,7 +32,7 @@ class AddAssets extends Component{
     this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this))
   }
 
-  componentWillMount(){
+  componentDidMount(){
     this.onFetch()
   }
   componentWillReceiveProps(nextProps){
@@ -100,9 +100,6 @@ class AddAssets extends Component{
     console.log('资产列表fetchTokenList===',fetchTokenList)
     return(
       <View style={{flex:1,backgroundColor:'#F5F7FB'}}>
-        {
-          //<Loading loadingVisible={this.state.loadingVisible} />  
-        }
         <ScrollView 
           showsVerticalScrollIndicator={false}
           refreshControl={

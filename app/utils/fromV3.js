@@ -1,6 +1,9 @@
-var scrypt  = require('scryptsy');
+// var scrypt  = require('scryptsy');
 var crypto = require('crypto');
 var sha3 = require('ethereumjs-util').sha3;
+
+import scrypt from './scrypt-async'
+
 import I18n from 'react-native-i18n'
 var Wallet = function(priv, pub, path, hwType, hwTransport) {
     if (typeof priv != "undefined") {
@@ -33,45 +36,53 @@ function toLowerCaseKeys(obj) {
   }, {});
 }
 
-async function fromV3(input, password, nonStrict) {
+
+//重写formv3
+async function fromV3 (input,password) {
+    console.log('fromV3 password',password)
+    console.log('fromV3 input',input)
     
     input = toLowerCaseKeys(input)
-    
-    var json = (typeof input === 'object') ? input : JSON.parse(nonStrict ? input : input)
+    let json = (typeof input === 'object') ? input : JSON.parse(input)
 
-    if (json.version !== 3) {
+    if(json.version !== 3) {
         throw 'Not a V3 wallet'
-    }
-    var derivedKey
-    var kdfparams
-    if (json.crypto.kdf === 'scrypt') {
-        kdfparams = json.crypto.kdfparams
-        
-        derivedKey = await scrypt(new Buffer(password), new Buffer(kdfparams.salt, 'hex'), kdfparams.n, kdfparams.r, kdfparams.p, kdfparams.dklen)
-
-    } else if (json.crypto.kdf === 'pbkdf2') {
-        kdfparams = json.crypto.kdfparams
-        if (kdfparams.prf !== 'hmac-sha256') {
-            throw 'Unsupported parameters to PBKDF2'
-        }
-        derivedKey = await crypto.pbkdf2Sync(new Buffer(password), new Buffer(kdfparams.salt, 'hex'), kdfparams.c, kdfparams.dklen, 'sha256')
-    } else {
-        throw 'Unsupported key derivation scheme'
-    }
-    var ciphertext = new Buffer(json.crypto.ciphertext, 'hex')
-
-    var mac = await sha3(Buffer.concat([derivedKey.slice(16, 32), ciphertext]))
-    if (mac.toString('hex') !== json.crypto.mac) {
-        throw I18n.t('password_is_wrong')
+        return
     }
 
-    var decipher = await crypto.createDecipheriv(json.crypto.cipher, derivedKey.slice(0, 16), new Buffer(json.crypto.cipherparams.iv, 'hex'))
-    var seed = decipherBuffer(decipher, ciphertext, 'hex')
-    while (seed.length < 32) {
-        var nullBuff = new Buffer([0x00]);
-        seed = Buffer.concat([nullBuff, seed]);
-    }
-    return new Wallet(seed)
+
+    let kdfparams = json.crypto.kdfparams
+    let seedKey 
+    scrypt(new Buffer(password), new Buffer(kdfparams.salt,'hex'), {
+        N: kdfparams.n,
+        r: kdfparams.r,
+        p: kdfparams.p,
+        dkLen: kdfparams.dklen,
+        encoding: 'hex'
+    },(derived) => {
+          let derivedKey = new Buffer(derived,'hex')
+          let ciphertextBuf = new Buffer(json.crypto.ciphertext, 'hex')
+
+          let buf = Buffer.concat([new Buffer(derivedKey,'hex').slice(16,32), ciphertextBuf])
+          let mac = sha3(buf)
+
+          if (mac.toString('hex') !== json.crypto.mac) {
+              throw(I18n.t('password_is_wrong')) 
+              return
+          }
+
+          let decipher = crypto.createDecipheriv(json.crypto.cipher, derivedKey.slice(0, 16), new Buffer(json.crypto.cipherparams.iv, 'hex'))
+          
+          let seed = decipherBuffer(decipher, ciphertextBuf, 'hex')
+
+
+          while (seed.length < 32) {
+              let nullBuff = new Buffer([0x00]);
+              seed = Buffer.concat([nullBuff, seed]);
+          }
+          seedKey = seed.toString('hex')
+    })
+    return seedKey
 }
 
 

@@ -15,6 +15,7 @@ import { connect } from 'react-redux'
 import { Btn } from '../../../components/'
 import I18n from 'react-native-i18n'
 import { copyKeystoreAction } from '../../../actions/accountManageAction'
+import Toast from 'react-native-root-toast'
 class NoticeText extends Component{
 	render(){
 		return(
@@ -44,15 +45,19 @@ class ExportKeyStore extends Component{
 			copyed: true
 		})
 		Clipboard.setString(this.state.keyStore)
-		this.props.dispatch(copyKeystoreAction(this.props.curAddr))
-	}
 
+		let t = Toast.show(I18n.t('copyed_to_clipboard'))
+	    setTimeout(() => {
+	      Toast.hide(t)
+	    },1000)
+
+		// this.props.dispatch(copyKeystoreAction(this.props.curAddr))
+	}
 	render(){
 		const { copyed,keyStore } = this.state 
 		return(
-			<View style={pubS.container}>
 				<ScrollView showsVerticalScrollIndicator={false}>
-					<View style={{marginTop:scaleSize(40),width: scaleSize(680),alignSelf:'center'}}>
+					<View style={{width: scaleSize(680),alignSelf:'center'}}>
 						<NoticeText
 							text1={I18n.t('offline_save')}
 							text2={I18n.t('offline_save_1')}
@@ -72,7 +77,10 @@ class ExportKeyStore extends Component{
 					</View>
 					
 					<View style={[styles.mneViewStyle,pubS.center]}>
-			      		<Text style={pubS.font22_3}>{keyStore}</Text>
+			      		<Text 
+			      			style={pubS.font22_3}
+			      			onLongPress={this.onCopyBtn}
+			      		>{keyStore}</Text>
 		      		</View>
 		      		<View style={{marginBottom: scaleSize(60)}}>
 						<Btn
@@ -85,7 +93,6 @@ class ExportKeyStore extends Component{
 		      		</View>
 				</ScrollView>
 				
-			</View>
 		)
 	}
 }

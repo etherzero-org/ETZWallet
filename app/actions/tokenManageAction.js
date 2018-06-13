@@ -54,17 +54,25 @@ const fetchTokenAction = (addr,refresh) => {
 
 
 const deleteSelectedToListAction = (delAddr,curaddr) => {
-	const onDelete = () => {
+	const onDeleteStart = () => {
 		return {
-			type: types.DELETE_TOKEN_LIST,
+			type: types.DELETE_TOKEN_LIST_START,
 			payload:{
 				delAddr,
 				curaddr,
 			}
 		}
 	}
+
+	const onDelete = () => {
+		return {
+			type: types.DELETE_TOKEN_LIST,
+			
+		}
+	}
 	
 	return(dispatch,getState) => {
+		dispatch(onDeleteStart())
 		tokenDBOpation.deleteSelectedToken({
 			parames: {
 				delAddr,
@@ -76,16 +84,23 @@ const deleteSelectedToListAction = (delAddr,curaddr) => {
 }
 
 const addSelectedToListAction = (addAddr,curaddr) => {
-	const onAdd = () => {
+	const onAddStart = () => {
 		return {
-			type: types.ADD_TOKEN_LIST,
+			type: types.ADD_TOKEN_LIST_START,
 			payload:{
 				addAddr,
 				curaddr
 			}
 		}
 	}
+	const onAdd = () => {
+		return {
+			type: types.ADD_TOKEN_LIST,
+			
+		}
+	}
 	return(dispatch,getState) => {
+		dispatch(onAddStart())
 		tokenDBOpation.addSelectedToken({
 			parames: {
 				addAddr,

@@ -164,7 +164,6 @@ class CreateAccount extends Component{
                 value={userNameVal}
                 onChangeText={this.onChangeUserNameText}
                 warningText={userNameWarning}
-                autoFocus={true}
               />
               <TextInputComponent
                 placeholder={I18n.t('password')}

@@ -278,35 +278,6 @@ class Payment extends Component{
               pendingMark: pendingTxList[pendingTxList.length-1]
             }))
           }
-
-          // if(this.state.currentTokenName === 'ETZ'){
-          //   this.props.dispatch(makeTxByETZAction({
-          //     txPsdVal,
-          //     senderAddress,
-          //     txValue,
-          //     receiverAddress,
-          //     noteVal,
-          //     gasValue,
-          //     fetchTokenList,
-          //     keyStore: this.state.keyStore,
-          //     pendingMark: pendingTxList[pendingTxList.length-1]
-          //   }))
-          // }else{
-          //   this.props.dispatch(makeTxByTokenAction({
-          //     txPsdVal:txPassword,
-          //     senderAddress,
-          //     txValue,
-          //     receiverAddress,
-          //     noteVal,
-          //     gasValue,
-          //     fetchTokenList,
-          //     currentTokenDecimals: this.state.currentTokenDecimals,
-          //     currentTokenAddress: this.state.currentTokenAddress,
-          //     currentTokenName: this.state.currentTokenName,
-          //     keyStore: this.state.keyStore,
-          //     pendingMark: pendingTxList[pendingTxList.length-1]
-          //   }))
-          // }
         },1000)
         this.props.dispatch(resetTxStatusAction())
       }
@@ -621,7 +592,6 @@ class Payment extends Component{
             value={receiverAddress}
             onChangeText={this.onChangeToAddr}
             warningText={txAddrWarning}
-            autoFocus={true}
           />
           <TextInputComponent
             placeholder={I18n.t('amount')}

@@ -14,7 +14,7 @@ import { setScaleText, scaleSize } from '../../../utils/adapter'
 import { connect } from 'react-redux'
 import { Btn } from '../../../components/'
 import I18n from 'react-native-i18n'
-import { copyKeystoreAction } from '../../../actions/accountManageAction'
+import { copyKeystoreAction,updateBackupStatusAction } from '../../../actions/accountManageAction'
 import Toast from 'react-native-root-toast'
 class NoticeText extends Component{
 	render(){
@@ -50,7 +50,8 @@ class ExportKeyStore extends Component{
 	    setTimeout(() => {
 	      Toast.hide(t)
 	    },1000)
-
+	    
+	    this.props.dispatch(updateBackupStatusAction(this.props.curAddr))
 		// this.props.dispatch(copyKeystoreAction(this.props.curAddr))
 	}
 	render(){

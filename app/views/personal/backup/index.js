@@ -223,8 +223,6 @@ class BackUpAccount extends Component{
       pKeyVisible: false,
       privKey: '',
     })
-
-    // this.props.dispatch(updateBackupStatusAction(this.props.address))
   }
 
   onConfirm = () => {
@@ -335,6 +333,7 @@ class BackUpAccount extends Component{
     setTimeout(() => {
       Toast.hide(t)
     },1000)
+    this.props.dispatch(updateBackupStatusAction(this.props.address))
   }
 
   backUpKeyStoreBtn = () => {

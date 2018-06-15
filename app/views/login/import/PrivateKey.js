@@ -163,7 +163,6 @@ class PrivateKey extends Component{
               value={userNameVal}
               onChangeText={this.onChangeUseNameText}
               warningText={userNameWarning}//
-              autoFocus={true}
             />
             <TextInputComponent
               isMultiline={true}

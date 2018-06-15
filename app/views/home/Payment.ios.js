@@ -571,7 +571,6 @@ class Payment extends Component{
               value={receiverAddress}
               onChangeText={this.onChangeToAddr}
               warningText={txAddrWarning}
-              autoFocus={true}
             />
             <TextInputComponent
               placeholder={I18n.t('amount')}

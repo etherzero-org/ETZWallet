@@ -39,7 +39,7 @@
   "mine":"Mine",
   "total_assets":"Total Assets",
   "cancel":"Cancel",
-  "receiver_address":"receiver’s account address",
+  "receiver_address":"Receiver’s address",
   "send_account":"payment amount",
   "remark":"remark",
   "next":"Next",
@@ -48,7 +48,7 @@
   "order_note":"Note",
   "transfer_address":"transfer wallet address",
   "payment_address":"Payment account",
-  "amount":"amount",
+  "amount":"Amount",
   "confirm":"Confirm",
   "enter_password":"Enter password",
   "make_payment":"Make Payment",
@@ -117,7 +117,7 @@
   "input_password":"please enter the password",
   "sending":"sending",
   "send_successful":"send successfully",
-  "note_1":"note(optional)",
+  "note_1":"Memo(optional)",
   "to_address":"To",
   "from_address":"From",
   "amount_1":"Amount",
@@ -175,5 +175,10 @@
   "no_screenshots":"Do not take screenshots",
   "no_screenshots_1":"Please make sure there is no one around and no camera! Do not save Keystone files with screenshots or photos",
   "low_than_balence":"Cannot be greater than the balance",
-  "copyed_to_clipboard":"Copied to clipboard"
+  "copyed_to_clipboard":"Copied to clipboard",
+  "customize_gas_price":"Custom Gas Price",
+  "customize_gas":"Custom Gas",
+  "customize_data":"Data",
+  "advance":"Advance",
+  
 }	

@@ -4,11 +4,13 @@ import Loading from './Loading'
 import LoadingModal from './LoadingModal'
 import ArrowToDetail from './ArrowToDetail'
 import NavHeader from './NavHeader'
+import Switch from './Switch'
 export {
   TextInputComponent,
   Btn,
   Loading,
   LoadingModal,
   ArrowToDetail,
-  NavHeader
+  NavHeader,
+  Switch
 }

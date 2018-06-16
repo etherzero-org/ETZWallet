@@ -71,7 +71,40 @@ class SwitchLanguage extends Component{
 	  	}
 	}
 	componentWillMount(){
-		console.log('languages======',I18n.currentLocale())
+		let a  =I18n.currentLocale()
+
+	    I18n.currentLocale().search(/zh/) === 0 ? a = 'zh' : null
+	    
+	    if(Platform.OS === 'ios'){
+	      switch(a){
+	        case 'zh':
+	          this.onSelectZh()
+	          break
+	        case 'en':
+	          this.onSelectEn()
+	          break
+	        case 'ru-RU':
+	          this.onSelectRu()
+	          break
+	        default:
+	          break
+	      }
+	    }else{
+	      switch(I18n.currentLocale()){
+	        case 'zh-CN':
+	          this.onSelectZh()
+	          break
+	        case 'en-US':
+	          this.onSelectEn()
+	          break
+	        case 'ru-RU':
+	          this.onSelectRu()
+	          break
+	        default:
+	          break
+	      }
+	    }
+    
 
   // 		localStorage.load({
   // 			key:'lang',
@@ -229,7 +262,7 @@ const styles = StyleSheet.create({
 	selectIcon: {
 	    height: scaleSize(40),
 	    width: scaleSize(40),
-	    borderRadius: 1000,  
+	    borderRadius: 100,  
 	},
 })
 export default connect(

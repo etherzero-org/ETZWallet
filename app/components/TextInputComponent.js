@@ -42,7 +42,7 @@ export default class TextInputComponent extends Component{
         >
           <View 
             pointerEvents={touchable ? 'none' : 'auto'}
-            style={[styles.textInputView,{ borderBottomWidth: Platform.OS === 'ios' ? StyleSheet.hairlineWidth : 0, marginTop: iptMarginTop,height: multiline ? scaleSize(190) :scaleSize(99)}]}
+            style={[styles.textInputView,{ borderBottomWidth: Platform.OS === 'ios'&&!multiline ? StyleSheet.hairlineWidth : 0, marginTop: iptMarginTop,height: multiline ? scaleSize(190) :scaleSize(99)}]}//
           >
             
           
@@ -55,6 +55,13 @@ export default class TextInputComponent extends Component{
             textAlignVertical={multiline ? 'top' : 'center'}
             {...this.props}
           />
+          {
+            coinUnit.length > 0 ?
+            <View style={{position:'absolute',right:4,top:scaleSize(32)}}>
+              <Text style={pubS.font26_5}>{coinUnit}</Text>
+            </View>
+            : null
+          }
           {
             amount.length > 0 ? 
               <Text>{amount}</Text>
@@ -123,13 +130,11 @@ const styles = StyleSheet.create({
   },
 
   textIptStyle: {
-    // borderColor:'red',
-    // borderWidth:1,
-    padding: 0,
+    borderColor:'green',
+    borderWidth:1,
     paddingLeft: 4,
     flex: 1,
     fontSize: setScaleText(26),
-    // width: scaleSize(680),
     color:'#657CAB'
   },
 })

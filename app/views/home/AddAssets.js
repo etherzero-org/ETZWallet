@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   selectIcon: {
     height: scaleSize(40),
     width: scaleSize(40),
-    borderRadius: 1000,  
+    borderRadius: 100,  
   },
   listItemView:{
     backgroundColor:'#fff',

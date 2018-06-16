@@ -17,7 +17,7 @@ import {
 
 import { pubS,DetailNavigatorStyle,MainThemeNavColor,ScanNavStyle } from '../../styles/'
 import { setScaleText, scaleSize, ifIphoneX } from '../../utils/adapter'
-import { TextInputComponent,Btn,Loading,NavHeader,LoadingModal } from '../../components/'
+import { TextInputComponent,Btn,Loading,NavHeader,LoadingModal,Switch } from '../../components/'
 import { connect } from 'react-redux'
 import Modal from 'react-native-modal'
 import Picker from 'react-native-picker'
@@ -66,7 +66,16 @@ class Payment extends Component{
       currentTokenAddress: '',
 
       currentAssetValue: '',//当前资产的数量 
-      keyboardHeight: 0
+      keyboardHeight: 0,
+
+      advancedOptions: false,
+
+      gasPrice: '',
+      gasLimit: '',
+      hexData: '',
+
+      currentNetGasPrice: 0,//当前网络中的gasprice
+
     }
     self = this
   }
@@ -133,7 +142,7 @@ class Payment extends Component{
       currentAccountName: currentAccount.account_name
     })
     this.assetsValue()
-
+    this.getGasPrice()
 
     this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow',this._keyboardDidShow.bind(this))
     this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide',this._keyboardDidHide.bind(this))
@@ -244,10 +253,13 @@ class Payment extends Component{
               txValue: txPassProps.tx_value,
               receiverAddress: txPassProps.tx_receiver,
               noteVal: txPassProps.tx_note,
+              // gasValue: txPassProps.gasValue,
               gasValue: txPassProps.gasValue,
               fetchTokenList,
               keyStore: this.state.keyStore,
-              pendingMark: pendingTxList[pendingTxList.length-1]
+              pendingMark: pendingTxList[pendingTxList.length-1],
+              gasPrice: txPassProps.gasPrice,
+              hexData: txPassProps.hexData,
             }))
           }else{
             this.props.dispatch(makeTxByTokenAction({
@@ -280,7 +292,12 @@ class Payment extends Component{
   _keyboardDidHide(){
 
   }
-
+  async getGasPrice(){
+    let gas = await web3.eth.getGasPrice()
+    this.setState({
+      currentNetGasPrice: parseFloat(gas/Math.pow(10,9))
+    })
+  }
   componentWillUnmount(){
     this.onPressClose()
     this.keyboardDidShowListener.remove();
@@ -359,29 +376,46 @@ class Payment extends Component{
     }
   }
   onNextStep = () => {
-    const { receiverAddress, txValue, noteVal,currentAssetValue } = this.state
+    const { receiverAddress, txValue, noteVal, currentAssetValue, gasPrice, gasLimit, hexData, currentNetGasPrice, advancedOptions} = this.state
+
     let addressReg = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{42}$/    
-    if(!addressReg.test(receiverAddress)){
+    if(!EthUtil.isValidAddress(receiverAddress)){
       this.setState({
         txAddrWarning: I18n.t('input_receive_address'),
       })
-      return
     }else if(parseFloat(txValue) + 0.01 > parseFloat(currentAssetValue)){
       Alert.alert(I18n.t('low_than_balence'))
+    }else if(txValue.length === 0){
+      this.setState({
+        txValueWarning: I18n.t('input_send_account')
+      })
+    }else if(advancedOptions){
+      this.checkAdvanOpt()
       return
     }else{
-      if(txValue.length === 0){
-        this.setState({
-          txValueWarning: I18n.t('input_send_account')
-        })
-        return
-      }else{
-        this.setState({
-          visible: true
-        })
-      }
+      this.setState({
+        visible: true
+      })
     }
         
+  }
+
+  checkAdvanOpt = () => {
+    const { gasPrice, gasLimit, hexData, currentNetGasPrice, advancedOptions } = this.state
+    if(parseFloat(gasPrice) < currentNetGasPrice){
+      Alert.alert(`建议gasPrice值大于${currentNetGasPrice}`)
+    }else if(parseFloat(gasLimit) < 21000){
+      Alert.alert('gas值需大于21000')
+    }else if(hexData.length > 0){
+      // if()//判断data值是否合法  长度  0x开头 16进制
+      this.setState({
+        visible: true
+      })
+    }else{
+      this.setState({
+        visible: true
+      })
+    }
   }
 
   toScan = () => {
@@ -471,7 +505,9 @@ class Payment extends Component{
     }
   }
   makeTransact(){
-    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue,currentTokenName } = this.state
+    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue,currentTokenName,gasPrice, gasLimit, hexData } = this.state
+    console.log('makeTransact  gasLimit',gasLimit)
+    console.log('makeTransact  gasLimit-----',typeof gasLimit)
     const { fetchTokenList,etzBalance } = this.props.tokenManageReducer 
 
       if(!this.state.isToken){
@@ -488,7 +524,10 @@ class Payment extends Component{
           tx_random:  Math.round(Math.random() * 10000),
           isToken: 0,
           txPassword: this.state.txPsdVal,
-          gasValue: this.state.gasValue
+          // gasValue: this.state.gasValue,
+          gasValue: gasLimit.length > 0 ? gasLimit : this.state.gasValue,
+          gasPrice: gasPrice,
+          hexData: hexData,
         }))
       }else{
         // this.makeTransactByToken()
@@ -537,6 +576,36 @@ class Payment extends Component{
       animationType: 'fade', 
     })
   }
+
+
+  closeSwitch = () => {
+    this.setState({
+      advancedOptions: false,
+    })
+  }
+  openSwitch = () => {
+    this.setState({
+      advancedOptions: true
+    })
+  }
+
+  onChangeGwei = (value) => {
+    this.setState({
+      gasPrice: value
+    })
+  }
+  onChangeGas = (value) => {
+    this.setState({
+      gasLimit: value
+    })
+  }
+  onChangeData = (value) => {
+    this.setState({
+      hexData: value
+    })
+  }
+
+
   render(){
     const { receiverAddress, txValue, noteVal,visible,modalTitleText,modalTitleIcon,txPsdVal,
             modalSetp1,txAddrWarning,txValueWarning,senderAddress,txPsdWarning,currentTokenName, gasValue } = this.state
@@ -585,9 +654,39 @@ class Payment extends Component{
               value={noteVal}
               onChangeText={this.onChangeNoteText}
             />
-            <View style={[styles.gasViewStyle,pubS.rowCenterJus]}>
-              <Text style={{color:'#C7CACF',fontSize: setScaleText(26)}}>Gas:</Text>
-              <Text>{gasValue}</Text>
+            {
+              // <View style={[styles.gasViewStyle,pubS.rowCenterJus]}>
+              //   <Text style={{color:'#C7CACF',fontSize: setScaleText(26)}}>Gas:</Text>
+              //   <Text>{gasValue}</Text>
+              // </View>
+              this.state.advancedOptions ? 
+              <View style={{height: scaleSize(420)}}>
+                <TextInputComponent
+                  placeholder={I18n.t('customize_gas_price')}
+                  value={this.state.gasPrice}
+                  onChangeText={this.onChangeGwei}
+                  coinUnit={'Gwei'}
+                />
+                <TextInputComponent
+                  placeholder={I18n.t('customize_gas')}
+                  value={this.state.gasLimit}
+                  onChangeText={this.onChangeGas}
+                />
+                <TextInputComponent
+                  isMultiline={true}
+                  placeholder={I18n.t('customize_data')}
+                  value={this.state.hexData}
+                  onChangeText={this.onChangeData}
+                  iptMarginTop={scaleSize(30)}
+                />
+              </View>
+              : <View style={{height: scaleSize(420)}}/>
+            }
+            <View style={styles.swidthContainer}>
+              <Switch
+                closeSwitch={this.closeSwitch}
+                openSwitch={this.openSwitch}
+              />
             </View>
             <Btn
               btnMarginTop={scaleSize(60)}
@@ -688,7 +787,10 @@ class RowText extends Component{
   }
 }
 const styles = StyleSheet.create({
-    
+    swidthContainer:{
+      alignSelf:'flex-end',
+      marginRight: scaleSize(35)
+    },
     gasViewStyle:{
       ...ifIphoneX(
         {

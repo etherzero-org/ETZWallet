@@ -80,7 +80,8 @@ function toLogin () {
           screen: {
             screen: 'login',
             navigatorStyle: {navBarHidden: true,statusBarColor:'#144396'},
-          }
+          },
+          animationType: 'fade'
         })
 }
 
@@ -89,7 +90,8 @@ function toSplash () {
     screen: {
       screen: 'splash',
       navigatorStyle: {navBarHidden: true,statusBarColor:'#144396'},
-    }
+    },
+    animationType: 'fade'
   })
 }
 

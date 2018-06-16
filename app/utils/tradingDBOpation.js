@@ -58,16 +58,13 @@ async function onSaveRecord(options){
 
 async function onMakeTxByETZ(options) {
 	const { parames, txETZSuccess, txETZFail } = options
-	const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue, fetchTokenList, keyStore, pendingMark } = parames.info
+	const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue, fetchTokenList, keyStore, pendingMark, gasPrice, hexData } = parames.info
 	try{
 		let input = toLowerCaseKeys(keyStore)
 		let json = (typeof input === 'object') ? input : JSON.parse(input)
 		let privKey = await fromV3(json,txPsdVal)
-	  	console.log('解析出的撕咬',privKey)
-	    let bufPrivKey = new Buffer(privKey, 'hex')
 
-	    console.log('senderAddress',senderAddress)
-	    console.log('txValue',txValue)
+	    let bufPrivKey = new Buffer(privKey, 'hex')
 	    
 	    let nonceNumber = await web3.eth.getTransactionCount(`0x${senderAddress}`)
 
@@ -75,13 +72,14 @@ async function onMakeTxByETZ(options) {
 
 	    let hex16 = parseInt(totalValue).toString(16)
 
+	    let gasP = parseFloat(gasPrice) * Math.pow(10,9)
 	    const txParams = {
 	      nonce: `0x${nonceNumber.toString(16)}`,
-	      gasPrice: '0x09184e72a000', 
+	      gasPrice: `0x${gasP.toString(16)}`, //0x09184e72a000
 	      gasLimit: `0x${parseFloat(gasValue).toString(16)}`,
 	      to: receiverAddress,
 	      value: `0x${hex16}`,
-	      data: '',
+	      data: hexData,
 	      chainId: 88
 	    }
 	    console.log('txParams',txParams)

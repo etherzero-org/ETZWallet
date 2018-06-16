@@ -17,7 +17,7 @@ import {
 
 import { pubS,DetailNavigatorStyle,MainThemeNavColor,ScanNavStyle } from '../../styles/'
 import { setScaleText, scaleSize, ifIphoneX } from '../../utils/adapter'
-import { TextInputComponent,Btn,Loading, NavHeader, LoadingModal} from '../../components/'
+import { TextInputComponent,Btn,Loading, NavHeader, LoadingModal, Switch} from '../../components/'
 import { connect } from 'react-redux'
 import Modal from 'react-native-modal'
 import Picker from 'react-native-picker'
@@ -31,6 +31,8 @@ import { getTokenGas, getGeneralGas } from '../../utils/getGas'
 import { splitDecimal } from '../../utils/splitNumber'
 
 import accountDB from '../../db/account_db'
+
+import DeviceInfo from 'react-native-device-info'
 
 const EthUtil = require('ethereumjs-util')
 const Wallet = require('ethereumjs-wallet')
@@ -67,6 +69,14 @@ class Payment extends Component{
       currentTokenAddress: '',
 
       currentAssetValue: '',//当前资产的数量 
+      advancedOptions: false,
+
+      gasPrice: '',
+      gasLimit: '',
+      hexData: '',
+
+      currentNetGasPrice: 0,//当前网络中的gasprice
+      
     }
     self = this
     this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this))
@@ -91,6 +101,8 @@ class Payment extends Component{
   }
 
   componentWillMount(){
+    const apiLevel = DeviceInfo.getAPILevel()
+    console.log('apiLevel1111',apiLevel)
     const { fetchTokenList } = this.props.tokenManageReducer 
 
     const { currentAccount } = this.props.accountManageReducer
@@ -148,9 +160,12 @@ class Payment extends Component{
       currentAccountName: currentAccount.account_name
     })
 
-  
+    
 
    this.assetsValue()
+
+    this.getGasPrice()
+
   }
   
   componentDidMount(){
@@ -257,10 +272,14 @@ class Payment extends Component{
               txValue: txPassProps.tx_value,
               receiverAddress: txPassProps.tx_receiver,
               noteVal: txPassProps.tx_note,
+              // gasValue: txPassProps.gasValue,
               gasValue: txPassProps.gasValue,
               fetchTokenList,
               keyStore: this.state.keyStore,
-              pendingMark: pendingTxList[pendingTxList.length-1]
+              pendingMark: pendingTxList[pendingTxList.length-1],
+              // gasLimit: passProps.gasLimit,
+              gasPrice: txPassProps.gasPrice,
+              hexData: txPassProps.hexData,
             }))
           }else{
             this.props.dispatch(makeTxByTokenAction({
@@ -291,6 +310,14 @@ class Payment extends Component{
     this.keyboardDidHideListener.remove()
   }
   
+
+  async getGasPrice(){
+    let gas = await web3.eth.getGasPrice()
+    this.setState({
+      currentNetGasPrice: parseFloat(gas/Math.pow(10,9))
+    })
+  }
+
 
 
    _keyboardDidShow = () => {
@@ -380,30 +407,49 @@ class Payment extends Component{
 
   }
   onNextStep = () => {
-    const { receiverAddress, txValue, noteVal, currentAssetValue} = this.state
+    const { receiverAddress, txValue, noteVal, currentAssetValue, gasPrice, gasLimit, hexData, currentNetGasPrice, advancedOptions} = this.state
     let addressReg = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{42}$/
-    if(!addressReg.test(receiverAddress)){
+
+
+    
+
+
+    if(!EthUtil.isValidAddress(receiverAddress)){
       this.setState({
         txAddrWarning: I18n.t('input_receive_address'),
       })
+    }else if(parseFloat(txValue) + 0.01 > parseFloat(currentAssetValue)){
+      Alert.alert(I18n.t('low_than_balence'))
+    }else if(txValue.length === 0){
+      this.setState({
+        txValueWarning: I18n.t('input_send_account')
+      })
+    }else if(advancedOptions){
+      this.checkAdvanOpt()
       return
     }else{
-      if(parseFloat(txValue) + 0.01 > parseFloat(currentAssetValue)){
-        Alert.alert(I18n.t('low_than_balence'))
-        return
-      }else{
-        if(txValue.length === 0){
-          this.setState({
-            txValueWarning: I18n.t('input_send_account')
-          })
-          return
-        }else{
-          this.setState({
-            visible: true
-          })
-        }
-      }
-    }    
+      this.setState({
+        visible: true
+      })
+    }
+  }
+  
+  checkAdvanOpt = () => {
+    const { gasPrice, gasLimit, hexData, currentNetGasPrice, advancedOptions } = this.state
+    if(parseFloat(gasPrice) < currentNetGasPrice){
+      Alert.alert(`建议gasPrice值大于${currentNetGasPrice}`)
+    }else if(parseFloat(gasLimit) < 21000){
+      Alert.alert('gas值需大于21000')
+    }else if(hexData.length > 0){
+      // if()//判断data值是否合法  长度  0x开头 16进制
+      this.setState({
+        visible: true
+      })
+    }else{
+      this.setState({
+        visible: true
+      })
+    }
   }
 
   toScan = () => {
@@ -503,7 +549,7 @@ class Payment extends Component{
     }
   }
   makeTransact(){
-    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue,currentTokenName } = this.state
+    const { txPsdVal,senderAddress,txValue,receiverAddress,noteVal,gasValue,currentTokenName,gasPrice, gasLimit, hexData } = this.state
     const { fetchTokenList,etzBalance } = this.props.tokenManageReducer 
       if(!this.state.isToken){
         this.props.dispatch(insert2TradingDBAction({
@@ -518,8 +564,9 @@ class Payment extends Component{
           tx_random:  Math.round(Math.random() * 10000),
           isToken: 0,
           txPassword: this.state.txPsdVal,
-          gasValue: this.state.gasValue
-
+          gasValue: gasLimit.length > 0 ? gasLimit : this.state.gasValue,
+          gasPrice: gasPrice,
+          hexData: hexData,
         }))
       }else{
         let tokenRandom = Math.round(Math.random() * 10000)
@@ -567,6 +614,32 @@ class Payment extends Component{
       animationType: 'fade', 
     })
   }
+  closeSwitch = () => {
+    this.setState({
+      advancedOptions: false,
+    })
+  }
+  openSwitch = () => {
+    this.setState({
+      advancedOptions: true
+    })
+  }
+
+  onChangeGwei = (value) => {
+    this.setState({
+      gasPrice: value
+    })
+  }
+  onChangeGas = (value) => {
+    this.setState({
+      gasLimit: value
+    })
+  }
+  onChangeDada = (value) => {
+    this.setState({
+      hexData: value
+    })
+  }
 
   render(){
     const { receiverAddress, txValue, noteVal,visible,modalTitleText,modalTitleIcon,txPsdVal,
@@ -606,11 +679,39 @@ class Payment extends Component{
             value={noteVal}
             onChangeText={this.onChangeNoteText}
           />
-          <View style={[styles.gasViewStyle,pubS.rowCenterJus]}>
-            <Text style={{color:'#C7CACF',fontSize: setScaleText(26)}}>Gas:</Text>
-            <Text>{gasValue}</Text>
+          {
+              // <View style={[styles.gasViewStyle,pubS.rowCenterJus]}>
+              //   <Text style={{color:'#C7CACF',fontSize: setScaleText(26)}}>Gas:</Text>
+              //   <Text>{gasValue}</Text>
+              // </View>
+            this.state.advancedOptions ? 
+            <View style={{height: scaleSize(390)}}>
+              <TextInputComponent
+                placeholder={I18n.t('customize_gas_price')}
+                value={this.state.gasPrice}
+                onChangeText={this.onChangeGwei}
+                coinUnit={'Gwei'}
+              />
+              <TextInputComponent
+                placeholder={I18n.t('customize_gas')}
+                value={this.state.gasLimit}
+                onChangeText={this.onChangeGas}
+              />
+              <TextInputComponent
+                isMultiline={true}
+                placeholder={I18n.t('customize_data')}
+                value={this.state.hexData}
+                onChangeText={this.onChangeDada}
+              />
+            </View>
+            : <View style={{height: scaleSize(390)}}/>
+          }
+          <View style={styles.swidthContainer}>
+            <Switch
+              closeSwitch={this.closeSwitch}
+              openSwitch={this.openSwitch}
+            />
           </View>
-
           <Btn
             btnMarginTop={scaleSize(60)}
             btnPress={this.onNextStep}
@@ -704,62 +805,26 @@ class RowText extends Component{
 }
 const styles = StyleSheet.create({
   
-    
+    swidthContainer:{
+      // marginTop: scaleSize(360),
+      alignSelf:'flex-end',
+      marginRight: scaleSize(35)
+    },
     
     gasViewStyle:{
-      ...ifIphoneX(
-        {
-          paddingLeft: 4,
-          alignSelf:'center',
-          width: 355,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderColor:'#DBDFE6',
-          height: scaleSize(99)
-        },
-        {
-          paddingLeft: 4,
-          alignSelf:'center',
-          width: scaleSize(680),
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderColor:'#DBDFE6',
-          height: scaleSize(99)
-        },
-        {
-          paddingLeft: 4,
-          alignSelf:'center',
-          width: scaleSize(680),
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderColor:'#DBDFE6',
-          height: scaleSize(99)
-        }
-      )
-
+      paddingLeft: 4,
+      alignSelf:'center',
+      width: scaleSize(680),
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderColor:'#DBDFE6',
+      height: scaleSize(99)
     },
     rowTextView:{
-      ...ifIphoneX(
-        {
-          width: 345,
-          height: scaleSize(88),
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderColor: '#DBDFE6',
-          alignSelf:'center'
-        },
-        {
-          width: scaleSize(680),
-          height: scaleSize(88),
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderColor: '#DBDFE6',
-          alignSelf:'center'
-        },
-        {
-          width: scaleSize(680),
-          height: scaleSize(88),
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderColor: '#DBDFE6',
-          alignSelf:'center'
-        }
-      )
-
+      width: scaleSize(680),
+      height: scaleSize(88),
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderColor: '#DBDFE6',
+      alignSelf:'center'      
     },
     modalTitle:{
       height: scaleSize(88),
@@ -777,11 +842,7 @@ const styles = StyleSheet.create({
 	    backgroundColor:'#fff',
     },
     modalClose:{
-      ...ifIphoneX(
-        {position:'absolute',left: 50,top: scaleSize(29)},
-        {position:'absolute',left: scaleSize(24),top: scaleSize(29)},
-        {position:'absolute',left: scaleSize(24),top: scaleSize(29)}
-      )
+      position:'absolute',left: scaleSize(24),top: scaleSize(29)
     }
 })
 

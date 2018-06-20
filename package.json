@@ -4,12 +4,18 @@
   "private": true,
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "rn-nodeify --install --hack",
+    "bundle-ios": "react-native bundle --entry-file ./index.ios.js --bundle-output ./ios/bundle/index.ios.jsbundle --platform ios --assets-dest ./ios/bundle --dev false",
+    "rel": "cd android && gradlew assembleRelease --console plain",
+    "run": "react-native run-android",
+    "clean": "rm -rf node_modules && rm -rf $TMPDIR/haste-map-react-native-packager-* && npm install && npm start -- --reset-cache"
   },
   "dependencies": {
     "@remobile/react-native-toast": "^1.0.7",
+    "@tradle/react-native-http": "^2.0.0",
     "assert": "^1.4.1",
-    "big-number": "^0.4.0",
+    "bignumber.js": "^4.0.2",
     "bip39": "^2.5.0",
     "browserify-zlib": "^0.1.4",
     "btoa": "^1.2.1",
@@ -23,41 +29,48 @@
     "ethereumjs-util": "^5.1.5",
     "ethereumjs-wallet": "^0.6.0",
     "events": "^1.1.1",
+    "hdkey": "^0.8.0",
     "https-browserify": "0.0.1",
     "mersenne-twister": "^1.1.0",
-    "moment": "^2.21.0",
     "node-libs-browser": "^2.1.0",
     "path-browserify": "0.0.0",
     "process": "^0.11.10",
     "querystring-es3": "^0.2.1",
     "randombytes": "git+https://github.com/liujett/randombytes.git",
-    "react": "^16.0.0-alpha.12",
-    "react-native": "^0.46.0",
+    "react": "^16.2.0",
+    "react-native": "^0.53.0",
     "react-native-camera": "^1.0.2",
-    "react-native-crypto": "^2.0.2",
+    "react-native-country-picker-modal": "^0.5.1",
+    "react-native-crypto": "^2.1.2",
+    "react-native-device-info": "^0.21.5",
     "react-native-drawer": "^2.5.0",
     "react-native-http": "github:tradle/react-native-http#834492d",
     "react-native-i18n": "^2.0.12",
+    "react-native-input-scroll-view": "^1.6.5",
+    "react-native-keyboard-aware-scroll-view": "^0.5.0",
+    "react-native-launch-image": "^1.0.3",
     "react-native-level-fs": "^3.0.0",
-    "react-native-mail": "^3.0.6",
     "react-native-modal": "^5.3.0",
-    "react-native-navigation": "git+https://github.com/bjacog/react-native-navigation.git",
+    "react-native-navigation": "^1.1.466",
     "react-native-os": "^1.1.0",
     "react-native-picker": "^4.3.5",
     "react-native-qrcode": "^0.2.6",
     "react-native-qrcode-scanner": "0.0.30",
-    "react-native-randombytes": "^2.2.0",
+    "react-native-randombytes": "^3.2.0",
+    "react-native-root-toast": "^3.0.1",
     "react-native-scrollable-tab-view": "^0.8.0",
     "react-native-sqlite-storage": "^3.3.4",
     "react-native-storage": "^0.2.2",
     "react-native-tcp": "^2.0.4",
     "react-native-toast": "^1.0.1",
     "react-native-udp": "^1.2.9",
+    "react-native-uuid": "^1.4.9",
     "react-redux": "^5.0.7",
     "readable-stream": "^1.0.33",
-    "realm": "^2.2.15",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
+    "rn-splash-screen": "^5.2.0",
+    "stream": "0.0.2",
     "stream-browserify": "^1.0.0",
     "string_decoder": "^0.10.31",
     "timers-browserify": "^1.4.2",
@@ -65,7 +78,7 @@
     "url": "^0.10.3",
     "util": "^0.10.3",
     "vm-browserify": "0.0.4",
-    "web3": "^1.0.0-beta.33"
+    "web3": "^1.0.0-beta.34"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -74,7 +87,7 @@
     "babel-preset-react-native": "^2.0.0",
     "jest": "20.0.4",
     "react-test-renderer": "16.0.0-alpha.12",
-    "rn-nodeify": "github:mvayngrib/rn-nodeify"
+    "rn-nodeify": "10.0.0"
   },
   "jest": {
     "preset": "react-native"
@@ -86,7 +99,7 @@
     "crypto": "react-native-crypto",
     "dns": "dns.js",
     "domain": "domain-browser",
-    "http": "react-native-http",
+    "http": "@tradle/react-native-http",
     "https": "https-browserify",
     "os": "react-native-os",
     "path": "path-browserify",
@@ -102,7 +115,8 @@
     "timers": "timers-browserify",
     "tty": "tty-browserify",
     "net": "react-native-tcp",
-    "vm": "vm-browserify"
+    "vm": "vm-browserify",
+    "tls": false
   },
   "browser": {
     "zlib": "browserify-zlib",
@@ -111,7 +125,7 @@
     "crypto": "react-native-crypto",
     "dns": "dns.js",
     "domain": "domain-browser",
-    "http": "react-native-http",
+    "http": "@tradle/react-native-http",
     "https": "https-browserify",
     "os": "react-native-os",
     "path": "path-browserify",
@@ -127,6 +141,7 @@
     "timers": "timers-browserify",
     "tty": "tty-browserify",
     "net": "react-native-tcp",
-    "vm": "vm-browserify"
+    "vm": "vm-browserify",
+    "tls": false
   }
 }

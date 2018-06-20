@@ -7,15 +7,18 @@ import {
   TouchableOpacity,
   StyleSheet,
   WebView, 
-  Clipboard
+  Clipboard,
+  StatusBar,
+  Platform
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle } from '../../styles/'
-import { setScaleText, scaleSize } from '../../utils/adapter'
+import { setScaleText, scaleSize,ifIphoneX } from '../../utils/adapter'
 import QRCode from 'react-native-qrcode'
 import { sliceAddress,timeStamp2FullDate } from '../../utils/splitNumber'
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
+import Toast from 'react-native-root-toast'
+import { NavHeader } from '../../components/'
 class TextInstructions extends Component{
   static defaultProps = {
     inColor: '#657CAB',
@@ -32,25 +35,35 @@ class TextInstructions extends Component{
   }
 }
 
-
+const MyStatusBar = ({backgroundColor, ...props}) => (
+  <View style={[styles.statusBar, { backgroundColor }]}>
+    <StatusBar translucent backgroundColor={backgroundColor} {...props} />
+  </View>
+)
 class TradingRecordDetail extends Component{
   constructor(props){
     super(props)
     this.state = {
-   
+      txDetail:{}
     }
   }
 
+  componentDidMount(){
+  
+    this.setState({
+        txDetail: this.props.detailInfo
+    })
+  }
 
   toWebView = (hash) => {
     this.props.navigator.push({
       screen: 'tx_web_view',
-      navigatorStyle:{
-        navBarHidden: true,
-        statusBarColor: '#fff',
-        screenBackgroundColor: 'white',
-        tabBarHidden: true
-      },
+      title:I18n.t('tx_records'),
+      backButtonTitle:I18n.t('back'),
+      backButtonHidden:false,
+      navigatorStyle:Object.assign({},DetailNavigatorStyle,{
+          navBarHidden: true,
+      }),
       passProps: {
         hash,
       }
@@ -58,33 +71,53 @@ class TradingRecordDetail extends Component{
   }
   onCopyBtn = () => {
     Clipboard.setString(this.props.detailInfo.tx_receiver)
-    Toast.showLongBottom(I18n.t('copy_successfully'))
+    let t = Toast.show(I18n.t('copy_successfully'))
+    setTimeout(() => {
+      Toast.hide(t)
+    },1000)
   }
 
-  
+  onPressBack = () => {
+    this.props.navigator.pop()
+  }
   render(){
-    const { detailInfo} = this.props
-
+    const { txDetail } = this.state
+    console.log('txDetail==222222222222=',txDetail)
     return(
       <View style={pubS.container}>
-        <Image source={require('../../images/xhdpi/ico_selectasset_transactionrecords_succeed.png')} style={styles.iocnStyle}/>
+        {
+          // Platform.OS == 'ios' ?
+          // <StatusBar backgroundColor="#FFFFFF"  barStyle="light-content" hidden={false} />
+          // : null
+        }
+        <MyStatusBar backgroundColor="#144396" barStyle="light-content" />
+        <NavHeader
+          navTitleColor={'#fff'}
+          navBgColor={'#144396'}
+          isAccount={false}
+          navTitle={I18n.t('tx_records_1')}
+          pressBack={this.onPressBack}
+          marginTopValue={0}
+        />
+
+        <Image source={ txDetail.tx_result === 1 ? require('../../images/xhdpi/ico_selectasset_transactionrecords_succeed.png') : require('../../images/xhdpi/ico_selectasset_transactionrecords_error.png')} style={styles.iocnStyle}/>
         <View style={styles.topView}></View>
         <View style={styles.mainStyle}>
           <View style={[styles.accountStyle,pubS.rowCenter2]}>
-            <Text style={pubS.font60_1}>{detailInfo.tx_value}</Text>
-            <Text style={[pubS.font22_3,{marginLeft: scaleSize(18),marginTop: scaleSize(28)}]}>{detailInfo.tx_token}</Text>
+            <Text style={pubS.font60_1}>{txDetail.tx_value}</Text>
+            <Text style={[pubS.font22_3,{marginLeft: scaleSize(18),marginTop: scaleSize(28)}]}>{txDetail.tx_token}</Text>
           </View>
           <TextInstructions
             title={I18n.t('payer')}
-            instructions={detailInfo.tx_sender}
+            instructions={txDetail.tx_sender}
           />
           <TextInstructions
             title={I18n.t('payee')}
-            instructions={detailInfo.tx_receiver}
+            instructions={txDetail.tx_receiver}
           />
           <TextInstructions
             title={I18n.t('note')}
-            instructions={detailInfo.tx_note}
+            instructions={txDetail.tx_note}
           />
 
           <View style={[{width: scaleSize(680),alignSelf:'center',marginTop: scaleSize(30),marginBottom: scaleSize(10)},pubS.bottomStyle]}></View>
@@ -92,22 +125,22 @@ class TradingRecordDetail extends Component{
             <View>
               <TextInstructions
                 title={I18n.t('tx_number')}
-                instructions={sliceAddress(detailInfo.tx_hash)} 
+                instructions={ Object.keys(txDetail).length > 0 ? sliceAddress(txDetail.tx_hash,12) : ''}
                 inColor={'#2B8AFF'}
-                onPressText={() => this.toWebView(detailInfo.tx_hash)}
-                />
+                onPressText={() => this.toWebView(txDetail.tx_hash)}
+              />
               <TextInstructions
                 title={I18n.t('block')}
-                instructions={detailInfo.tx_block_number}
-                />
+                instructions={txDetail.tx_block_number}
+              />
               <TextInstructions
                 title={I18n.t('tx_time')}
-                instructions={timeStamp2FullDate(detailInfo.tx_time)}
-                />
+                instructions={ Object.keys(txDetail).length > 0 ? timeStamp2FullDate(txDetail.tx_time) : null }
+              />
             </View>
             <View style={{marginTop: scaleSize(40)}}>
               <QRCode
-                value={detailInfo.tx_receiver}
+                value={txDetail.tx_receiver}
                 size={scaleSize(170)}
                 bgColor='#000'
                 fgColor='#fff'
@@ -123,7 +156,16 @@ class TradingRecordDetail extends Component{
     )
   }
 }
+
+
+const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const APPBAR_HEIGHT = Platform.OS === 'ios' ? 44 : 56;
+
+
 const styles = StyleSheet.create({
+    statusBar: {
+      height: STATUSBAR_HEIGHT,
+    },
     btnStyle:{
         height: scaleSize(50),
         width: scaleSize(170),
@@ -132,25 +174,80 @@ const styles = StyleSheet.create({
         marginTop: scaleSize(10)
     },
     iocnStyle:{
-      width: scaleSize(100),
-      height: scaleSize(100),
-      position:'absolute',
-      left: scaleSize(325),
-      top: scaleSize(50),
-      zIndex: 999,
+      ...ifIphoneX(
+        {
+          width: scaleSize(100),
+          height: scaleSize(100),
+          position:'absolute',
+          left: 160,
+          top: scaleSize(160),
+          zIndex: 999,
+        },
+        {
+          width: scaleSize(100),
+          height: scaleSize(100),
+          position:'absolute',
+          left: scaleSize(325),
+          top: scaleSize(160),
+          zIndex: 999,
+        },
+        {
+          width: scaleSize(100),
+          height: scaleSize(100),
+          position:'absolute',
+          left: scaleSize(325),
+          top: scaleSize(160),
+          zIndex: 999,
+        }
+      )
+
     },
     accountStyle:{
-      height: scaleSize(178),
-      borderColor:'#DBDFE6',
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      width: scaleSize(680),
-      alignSelf:'center',
-      marginBottom: scaleSize(10),
-      // borderWidth:1,
+      ...ifIphoneX(
+        {
+          height: scaleSize(178),
+          borderColor:'#DBDFE6',
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          width: 375,
+          alignSelf:'center',
+          marginBottom: scaleSize(10),
+          // borderWidth:1,
+        },
+        {
+          height: scaleSize(178),
+          borderColor:'#DBDFE6',
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          width: scaleSize(680),
+          alignSelf:'center',
+          marginBottom: scaleSize(10),
+          // borderWidth:1,
+        },{
+          height: scaleSize(178),
+          borderColor:'#DBDFE6',
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          width: scaleSize(680),
+          alignSelf:'center',
+          marginBottom: scaleSize(10),
+          // borderWidth:1,
+        }
+      )
+
     },
     mainStyle:{
-        backgroundColor:'#fff',
-        width: scaleSize(750)
+       ...ifIphoneX(
+         {
+          backgroundColor:'#fff',
+          width: 375
+         },
+         {
+          backgroundColor:'#fff',
+          width: scaleSize(750)
+         },
+         {
+          backgroundColor:'#fff',
+          width: scaleSize(750)
+         }
+       )
     },
     topView:{
       height: scaleSize(100),

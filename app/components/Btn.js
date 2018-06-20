@@ -7,19 +7,20 @@ import {
   StyleSheet
 } from 'react-native'
 import {pubS} from '../styles/'
-import { scaleSize, setScaleText } from '../utils/adapter'
+import { scaleSize, setScaleText,isIphoneX } from '../utils/adapter'
 export default class Btn extends Component {
   static defaultProps = {
-    btnWidth: scaleSize(680),
+    btnWidth: isIphoneX() ? 345 : scaleSize(680),
     bgColor: '#2B8AFF',
     btnMarginTop: 0,
-    opacity: .7
+    opacity: .7,
+    textStyle: pubS.font26_1
   }
   render () {
-    const {  btnWidth, btnPress, btnText,btnMarginTop,bgColor,opacity } = this.props
+    const {  btnWidth, btnPress, btnText,btnMarginTop,bgColor,opacity,textStyle } = this.props    
     return (
       <TouchableOpacity style={[{width: btnWidth ,marginTop: btnMarginTop,backgroundColor:bgColor,}, pubS.center, styles.btnView]} activeOpacity={opacity} onPress={btnPress}>
-        <Text style={pubS.font26_1}>{btnText}</Text>
+        <Text style={textStyle}>{btnText}</Text>
       </TouchableOpacity>
     )
   }

@@ -1,62 +1,34 @@
 import * as types from  '../constants/accountManageConstant'
 import accountDBOpation from '../utils/accountDBOpation'
-const getAccountInfoAction = (info) => {
-	const getInfo = () => {
-		return {
-			type: types.GET_ACCOUNT_INFO,
-			payload: {
-				info,
-			}
-		}
-	}
-	return(dispatch,getState) => {
-		dispatch(getInfo())
-	}
-}
-const passAccountsInfoAction = () => {
-	const passStart = () => {
-		return {
-			type: types.PASS_ACCOUNTS_INFO_START,
-			payload:{
 
-			}
-		}
-	} 
-	const passSuc = (data) => {
-		return {
-			type: types.PASS_ACCOUNTS_INFO_SUC,
-			payload:{
-				data
-			}	
-		}
-	}
-	const passFail = (msg) => {
-		return {
-			type: types.PASS_ACCOUNTS_INFO_FAIL,
-			payload:{
-				msg
-			}
-		}
-	}
-	return(dispatch,getState) => {
-		dispatch(passStart())
-		accountDBOpation.passAccountsInfo({
-			passAccInfoSuc: (data) => {dispatch(passSuc(data))},
-			passAccInfoFail: (msg) => {dispatch(passFail(msg))},
-		})
-	}
-}
+
 const switchAccountAction = (addr) => {
-	const getInfo = () => {
+	const switchStart = () => {
 		return {
-			type: types.ON_SWITCH_ACCOUNT,
+			type: types.ON_SWITCH_ACCOUNT_START,
 			payload: {
 				addr,
 			}
 		}
 	}
+
+	const switchEnd = () => {
+		return {
+			type: types.ON_SWITCH_ACCOUNT_END,
+			payload:{
+				switchAddr: addr,
+			}
+		}
+	}
+
 	return(dispatch,getState) => {
-		dispatch(getInfo())
+		dispatch(switchStart())
+		accountDBOpation.switchAccount({
+			parames: {
+				switchAddr: addr,
+			},
+			switchAccountEnd:() => {dispatch(switchEnd())}
+		})
 	}
 }
 const importAccountAction = (data) => {
@@ -97,6 +69,10 @@ const importAccountAction = (data) => {
 				mnemonicUserName: data.mnemonicUserName,
 				keystoreVal: data.keystoreVal,
 				keystoreUserName: data.keystoreUserName,
+				keystorePsd: data.keystorePsd,
+				fromLogin: data.fromLogin,
+				accountsList: data.accountsList,
+				hintValue: data.hintValue
 			},
 			importSuccess: (data) => {dispatch(importSuc(data))},
 			importFailure: (msg) => {dispatch(importFail(msg))}
@@ -105,50 +81,39 @@ const importAccountAction = (data) => {
 }
 
 const deleteAccountAction = (deleteId,accountsNum,curId) => {
-	// const onDelete = () => {
-	// 	return {
-	// 		type: types.ON_DELETE_ACCOUNT,
-	// 		payload: {
-	// 			deleteId
-	// 		}
-	// 	}
-	// }
+
 	const onDelStart = () => {
 		return {
 			type: types.ON_DELETE_ACCOUNT_START,
-			payload: {
-
-			}
 		}
 	}
-	const delSuc = (data) => {
+	const delSuc = () => {
 		return {
 			type: types.ON_DELETE_ACCOUNT_SUC,
 			payload: {
-				data
+				deleteId,
+				curId
 			}
 		}
 	}
-	const delFail = (msg) => {
+	const delFail = () => {
 		return {
 			type: types.ON_DELETE_ACCOUNT_FAIL,
 			payload: {
-				msg
+				deleteId,
 			}
+			
 		}
 	}
 	return(dispatch,getState) => {
-		// dispatch(onDelete())
-
 		dispatch(onDelStart())
 		accountDBOpation.deleteAccount({
 			parames: {
 				deleteId,
-				accountsNum,
 				curId,
 			},
-			delSuccess: (data) => {dispatch(delSuc(data))},
-			delFailure: (msg) => {dispatch(delFail(msg))}
+			delSuccess: () => {dispatch(delSuc())},
+			delFailure: () => {dispatch(delFail())}
 		})
 	}
 }
@@ -172,8 +137,23 @@ const updateBackupStatusAction = (addr) => {
 			}
 		}
 	}
+	const updateSuc = (data) => {
+		return {
+			type: types.UPDATE_BACKUP_STATUS_SUCC,
+			payload: {
+				data,
+				updateAddr: addr
+			}
+		}
+	}
 	return(dispatch,getState) => {
 		dispatch(onUpdate())
+		accountDBOpation.updatePrivStatus({
+			parames: {
+				addr
+			},
+			updatePrivSuccess:(data) =>{dispatch(updateSuc(data))}
+		})
 	}
 }
 
@@ -195,50 +175,260 @@ const createAccountAction = (par) => {
 			}
 		}
 	}
-	const createFail = (msg) => {
-		return {
-			type: types.CREATE_ACCOUNT_FAIL,
-			payload: {
-				msg
-			}
-		}
-	}
+
 	return(dispatch,getState) => {
 		dispatch(onStart())
 		accountDBOpation.createAccount({
 			parames: {
+				userNameVal:par.userNameVal,
+				psdVal: par.psdVal,
+				promptVal: par.promptVal,
+				fromLogin: par.from,
+				mnemonicValue: par.mnemonicValue
+			},
+			createSuccess: (data) => {dispatch(createSucc(data))},
+		})
+	}
+}
+const genMnemonicAction = (par) => {
+	const genStart = () => {
+		return {
+			type: types.GEN_MNEMONIC_START,
+			payload: {
+				
+			}
+		}
+	}
+	const genSucc = (mne) => {
+		return {
+			type: types.GEN_MNEMONIC_SUC,
+			payload: {
+				mne,
 				userNameVal: par.userNameVal,
 				psdVal: par.psdVal,
 				promptVal: par.promptVal,
+				fromLogin: par.from,
+			}
+		}
+	}
+
+	return(dispatch,getState) => {
+		dispatch(genStart())
+		accountDBOpation.genMnemonic({
+			parames: {
+				fromLogin: par.from,
 			},
-			createSuccess: (data) => {dispatch(createSucc(data))},
-			createFailure: (msg) => {dispatch(createFail(msg))}
+			genSuccess: (mne) => {dispatch(genSucc(mne))},
 		})
 	}
 }
 
 const deleteMnemonicAction = (addr) => {
-	const delMne = () => {
+	const deleteSuc = (data) => {
 		return {
 			type: types.DELETE_MNEMONIC,
 			payload: {
+				data,
 				addr
 			}
 		}
 	}
+	const deleteMnemonicStart = () => {
+		return {
+			type: types.DELETE_MNEMONIC_START,
+
+		}
+	}
 	return(dispatch,getState) => {
-		dispatch(delMne())
+		dispatch(deleteMnemonicStart())
+		accountDBOpation.deleteMnemonic({
+			parames: {
+				addr
+			},
+			delSuc:(data) => {dispatch(deleteSuc(data))}
+		})
 	}
 }
 
+
+const globalAllAccountsInfoAction = (infos) => {
+	const sharedInfos = () => {
+		return {
+			type: types.GLOBAL_ALL_ACCOUNTS_INFO,
+			payload:{
+				infos
+			}
+		}
+	}
+	return (dispatch,getState) => {
+		dispatch(sharedInfos())
+	}
+}
+const globalCurrentAccountInfoAction = (currinfos) => {
+	const curInfos = () => {
+		return {
+			type: types.GLOBAL_CURRENT_ACCOUNT_INFO,
+			payload:{
+				currinfos
+			}
+		}
+	}
+	return (dispatch,getState) => {
+		dispatch(curInfos())
+	}
+}
+
+const changeBackupModalTimesAction = (time) => {
+	const changeTimes = () => {
+		return{
+			type: types.CHANGE_BACKUP_MODAL_TIMES,
+			payload:{
+				time
+			}
+		}
+	}
+	return (dispatch,getState) => {
+		dispatch(changeTimes())
+	}
+}
+
+const showImportLoadingAction = (status) => {
+	const onShow = () => {
+		return {
+			type: types.SHOW_IMPORT_LOADING,
+			payload: {
+				status
+			}
+		}
+	}
+	return (dispatch,getState) => {
+		dispatch(onShow())
+	}
+}
+
+const passReceiveAddressAction = (addr,token) => {
+	const onPass = () => {
+		return {
+			type: types.PASS_SCAN_RECEIVE_ADDRESS,
+			payload: {
+				addr,
+				token,
+			}
+		}
+	}
+	return (dispatch,getState) => {
+		dispatch(onPass())
+	}
+}
+
+const refreshManageBalanceAction = (list) => {
+	const getBal = (data) => {
+		return{
+			type: types.REFERSH_MANEGE_BALANCE,
+			payload: {
+				data,
+			}
+		}
+	}
+	return (dispatch,getState) => {
+		accountDBOpation.getManageBalance({
+			parames: {
+				list
+			},
+			getBalanceNum: (data) => {dispatch(getBal(data))}
+		})
+	}
+}
+
+
+
+const passPropsAction = (data) => {
+	const pass = () => {
+		return {
+			type: types.PASS_PROPS,
+			payload:{
+				currentList: data.currentList,
+				keyStore: data.keyStore
+			}
+		}
+	}
+	return (dispatch,getState) => {
+		dispatch(pass())
+	}
+}
+
+const modifyPasswordAction = (info) => {
+	const modifyStart = () => {
+		return {
+			type: types.MODIFY_PASSWORD_START	
+		}
+	}
+
+	const suc = (data) => {
+		return {
+			type: types.MODIFY_PASSWORD_SUC,
+			payload: {
+				modifyText: data.modifyText,
+				modifyResult: data.modifyResult,
+			}
+		}
+	}
+	
+	const err = (msg) => {
+		return {
+			type: types.MODIFY_PASSWORD_FAIL,
+			payload:{
+				msg
+			}
+		}
+	}
+	
+	return (dispatch,getState) => {
+		dispatch(modifyStart())
+		accountDBOpation.modifyPassword({
+			parames: {
+				currentList: info.currentList,
+				keys: info.keys,
+				oldPsd: info.oldPsd,
+				newPsd: info.newPsd,
+			},
+			modifySuccess: (data) => {dispatch(suc(data))},
+			modifyFail: (msg) => {dispatch(err(msg))}
+		})
+	}
+}
+
+const copyKeystoreAction = (addr) => {
+	const onCopy = () => {
+		return{
+			type: types.COPY_KEYSTORE_BACKUP,
+		}
+	}
+	return(dispatch,getState) => {
+		dispatch(onCopy())
+		accountDBOpation.updateBackupKeystore({
+			parames: {
+				addr,
+			}
+		})
+	}
+}
 export {
-	getAccountInfoAction,
 	switchAccountAction,
 	importAccountAction,
 	deleteAccountAction,
 	resetDeleteStatusAction,
 	updateBackupStatusAction,
-	passAccountsInfoAction,
 	createAccountAction,
-	deleteMnemonicAction
+	deleteMnemonicAction,
+	globalAllAccountsInfoAction,
+	globalCurrentAccountInfoAction,
+	changeBackupModalTimesAction,
+	showImportLoadingAction,
+	passReceiveAddressAction,
+	refreshManageBalanceAction,
+	modifyPasswordAction,
+	passPropsAction,
+	genMnemonicAction,
+	copyKeystoreAction
 }

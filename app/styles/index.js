@@ -1,17 +1,8 @@
 import { setScaleText, scaleSize } from '../utils/adapter'
-import { StyleSheet } from 'react-native'
+import { StyleSheet,ifIphoneX } from 'react-native'
 import { switchDrawer } from '../utils/switchDrawer'
 import { Platform } from 'react-native'
 //main theme color:   #144396
-
-// navigatorButtons: {
-//   rightButtons: [
-//     {
-//       title: 'Save',
-//       id: 'save_back_up_info'
-//     }
-//   ]
-// }
       
 const ScanNavStyle = Object.assign({},DetailNavigatorStyle,{
         navBarTextColor:'#fff',
@@ -47,7 +38,7 @@ const DetailNavigatorStyle = {
   navBarTextFontSize: 14,
   navBarBackgroundColor: '#fff',
   navBarComponentAlignment: 'center',
-  navBarButtonColor: '#D2D5DB',//
+  navBarButtonColor: '#c4c7cc',//back btn
   navBarLeftButtonColor:'#D2D5DB',//only ios
   navBarRightButtonColor:'#2B8AFF',//only ios
   navBarHidden: false,
@@ -66,16 +57,27 @@ const MainThemeNavColor = Object.assign({},DetailNavigatorStyle,{
   statusBarColor:'#144396',
   statusBarTextColorScheme:'light'
 })
-
-const TabBarAppStyle = {
+const TabBarIOSStyle = {
   tabBarHidden: false, // make the tab bar hidden
+  //tabBarButtonColor: '#C7CAD0', // change the color of the tab icons and text (also unselected)
+  //tabBarSelectedButtonColor: '#2B8AFF', // change the color of the selected tab icon and text (only selected)
+  //tabBarBackgroundColor: '#fff', // change the background color of the tab bar
+  tabBarTranslucent: false, // change the translucent of the tab bar to false
+  // tabBarTextFontFamily: 'Avenir-Medium', //change the tab font family
+  // tabBarLabelColor: '#ffb700', // iOS only. change the color of tab text
+  // tabBarSelectedLabelColor: 'red', // iOS only. change the color of the selected tab text
+  // forceTitlesDisplay: true, // Android only. If true - Show all bottom tab labels. If false - only the selected tab's label is visible.
+  // tabBarHideShadow: true // Remove default tab bar top shadow (hairline)
 
-  //ios bug
+  navBarHeight: 45, // Optional, set the navBar height in pixels.
+  topTabsHeight: scaleSize(98),
+}
+const TabBarAppStyle = {
+  keepStyleAcrossPush: false,
+  tabBarHidden: false, // make the tab bar hidden
   tabBarButtonColor: '#C7CAD0',
   tabBarSelectedButtonColor: '#2B8AFF', 
   tabBarBackgroundColor: '#fff',
-  //ios bug
-
   tabBarTranslucent: false, // change the translucent of the tab bar to false
   forceTitlesDisplay: true, // Android only. If true - Show all bottom tab labels. If false - only the selected tab's label is visible.
   tabBarHideShadow: true, // iOS only. Remove default tab bar top shadow (hairline)
@@ -101,7 +103,7 @@ const SingleScreenAppNavigatorStyle = {
   // navBarHideOnScroll: false, // make the nav bar hidden only after the user starts to scroll
   // navBarTranslucent: false, // make the nav bar semi-translucent, works best with drawUnderNavBar:true
   // navBarTransparent: false, // make the nav bar transparent, works best with drawUnderNavBar:true,
-  // navBarNoBorder: false, // hide the navigation bar bottom border (hair line). Default false
+  navBarNoBorder: true, // hide the navigation bar bottom border (hair line). Default false
   // drawUnderNavBar: false, // draw the screen content under the nav bar, works best with navBarTranslucent:true
   // drawUnderTabBar: false, // draw the screen content under the tab bar (the tab bar is always translucent)
   // navBarBlur: false, // blur the entire nav bar, works best with drawUnderNavBar:true
@@ -150,6 +152,10 @@ const SingleScreenAppNavigatorStyle = {
 }
 
 const pubS = {
+  posCenter: {
+    position: 'absolute',
+    alignSelf: 'center',
+  },
   logoStyle:{
     width: scaleSize(44),
     height:scaleSize(44),
@@ -204,15 +210,31 @@ const pubS = {
     flexDirection:'row',
     alignItems:'flex-end',
   },
+  textInputWH: {
+    height: scaleSize(99),
+    width: scaleSize(664),
+    alignSelf:'center'
+  },
   rowAround: {
     flexDirection: 'row',
     justifyContent: 'space-around'
+  },
+  arrowViewStyle:{
+    width: scaleSize(45),
+    height: scaleSize(43),
+    alignItems:'flex-end',
+    position:'absolute',
+    right:4,
+    top:scaleSize(32),
   },
   rowAlignCenter: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-
+  bottomStyle1:{
+    borderColor:'#DBDFE6',
+    borderBottomWidth:1,
+  },
   bottomStyle: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor:'#dce4e6',
@@ -278,6 +300,18 @@ const pubS = {
     color:'#A1A4A8',
     fontSize: setScaleText(24)
   },
+  font24_6:{
+    color:'#fff',
+    fontSize: setScaleText(24)
+  },
+  font24_7:{
+      color:'#2B8AFF',
+      fontSize: setScaleText(24)
+  },
+  font24_8:{
+      color:'#080E5D',
+      fontSize: setScaleText(24)
+  },
   font26_1:{
     color:'#fff',
     fontSize: setScaleText(26)
@@ -301,6 +335,10 @@ const pubS = {
   font26_6:{
     color:'#000',
     fontSize: setScaleText(26)
+  },
+  font26_7:{
+      color:'#2B8AFF',
+      fontSize: setScaleText(26)
   },
   font28_1:{
       color:'#95C4FF',
@@ -332,6 +370,10 @@ const pubS = {
   },
   font30_3:{
     color:'#FEFEFE',
+    fontSize: setScaleText(30)
+  },
+  font30_4:{
+    color:'#FFF422',
     fontSize: setScaleText(30)
   },
   font32_1:{
@@ -370,12 +412,20 @@ const pubS = {
     color:'#FFF',
     fontSize: setScaleText(36)
   },
+  font36_5:{
+    color:'#B92B31',
+    fontSize: setScaleText(36)
+  },
   font54_1:{
     color:'#fff',
     fontSize: setScaleText(54)
   },
   font60_1:{
     color:'#657CAB',
+    fontSize: setScaleText(60)
+  },
+  font60_2:{
+    color:'#4C69FF',
     fontSize: setScaleText(60)
   },
   font72_1:{
@@ -390,5 +440,6 @@ export {
   AssetsNavStyle,
   MainThemeNavColor,
   TabBarAppStyle,
-  ScanNavStyle
+  ScanNavStyle,
+  TabBarIOSStyle
 }

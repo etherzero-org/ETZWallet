@@ -14,15 +14,10 @@ import ScrollableTabView, { DefaultTabBar, ScrollableTabBar } from 'react-native
 import Picker from 'react-native-picker'
 import RecordAll from './RecordAll'
 import RecordPay from './RecordPay'
-import RecordCollection from './RecordCollection'
-
-import TradingSQLite from '../../../utils/tradingDB'
-import UserSQLite from '../../../utils/accountDB'
-const tradingSqLite = new TradingSQLite()  
-let t_db
-const sqLite = new UserSQLite();  
-let db  
+import RecordCollection from './RecordCollection' 
 import I18n from 'react-native-i18n'
+import accountDB from '../../../db/account_db'
+import { connect } from 'react-redux'
 
 const PickerData = [
   ['January ','February','March','April','May','June','July','August','September','October','November','December'],
@@ -46,36 +41,11 @@ class TradingRecord extends Component{
     }
   }
   componentWillMount(){
-    if(!t_db){
-      t_db = tradingSqLite.open()
-    }
-    if(!db){
-      db = sqLite.open()
-    }
 
-    db.transaction((tx) => {
-        tx.executeSql("select * from account where is_selected=1",[],(tx,results)=>{
-          let aName = results.rows.item(0).account_name
-          t_db.transaction((tx)=>{  
-              tx.executeSql("select * from trading where tx_account_name = ?", [aName],(tx,t_results)=>{  
-                let len = t_results.rows.length 
-                let list = []
-                for(let i=0; i<len; i++){  
-                  let u = t_results.rows.item(i)
-                  list.push(u)
-                }
-                this.setState({
-                  tradingList: list
-                })
-              })
-          },(error)=>{
+    this.getTradingList()
 
-          })
-        })
-      },(error) => {
-
-    })
   }
+
   componentDidMount(){
     Picker.init({
       pickerConfirmBtnText: I18n.t('confirm'),
@@ -96,8 +66,21 @@ class TradingRecord extends Component{
       },
     })
   }
+  async getTradingList(){
+    const { currentAccount } = this.props.accountManageReducer
+    // console.log('currentAccount==============',currentAccount)
+    let selRes = await accountDB.selectTable({
+      sql: 'select * from trading where tx_sender = ?',
+      parame: [`0x${currentAccount.address}`]
+    })
+    // console.log('selRes===========',selRes)
 
+    this.setState({
+      tradingList: selRes
+    })
+  }
   render(){
+    const { tradingList } = this.state
     return(
       <View style={pubS.container}>
         <ScrollableTabView
@@ -117,8 +100,8 @@ class TradingRecord extends Component{
             />
           )}
         >
-            <RecordAll key={1} tabLabel={'All'} list={this.state.tradingList}/>
-            <RecordPay key={2} tabLabel={'Send'} list={this.state.tradingList}/>
+            <RecordAll key={1} tabLabel={I18n.t('all')} list={tradingList}/>
+            <RecordPay key={2} tabLabel={I18n.t('sended')} list={tradingList}/>
             {
               //<RecordCollection key={3} tabLabel={'Receive'}/>
             }
@@ -137,4 +120,8 @@ const styles = StyleSheet.create({
     height:0,
   }
 })
-export default TradingRecord
+export default connect(
+  state => ({
+    accountManageReducer: state.accountManageReducer
+  })
+)(TradingRecord)

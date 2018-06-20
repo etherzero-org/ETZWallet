@@ -3,25 +3,22 @@ import {
   View,
   Text,
   Image,
-  Button
+  Button,
+  Platform,
+  NativeModules,
+  StatusBar
 } from 'react-native'
 import { toHome, toLogin} from '../root'
-import { getLocalDataAction } from '../actions/getLocalDataAction' 
 import { connect } from 'react-redux'
-import UserSQLite from '../utils/accountDB'
-import TradingSQLite from '../utils/tradingDB'
-import { passAccountsInfoAction,getAccountInfoAction } from '../actions/accountManageAction'
-import { switchLanguageAction } from '../actions/switchLanguageAction'
-import { DetailNavigatorStyle} from '../styles/'
-const sqLite = new UserSQLite()  
-let db  
-const tSqLite = new TradingSQLite()
-let t_db
-import TokenSQLite from '../utils/tokenDB'
 
-const tkSqLite = new TokenSQLite()
-let tk_db
+import { DetailNavigatorStyle} from '../styles/'
+
 import I18n from 'react-native-i18n'
+
+import accountDB from '../db/account_db'
+import { platform } from 'os';
+import * as launchImage from 'react-native-launch-image';
+
 class Splash extends Component{
   constructor(props){
     super(props)
@@ -32,105 +29,112 @@ class Splash extends Component{
 
   
   componentWillMount(){
-
-    // tkSqLite.deleteData()
-    // tkSqLite.dropTable()
-    //   sqLite.dropTable()
-    //   sqLite.deleteData() 
-
-    // this.props.dispatch(passAccountsInfoAction())
+    // this.onDelete()
+    // this.onDrop3()
+    // this.onDrop1()
+    // this.onDrop2()
 
     // localStorage.remove({
     //   key: 'lang'
     // })
-
-
+    
     localStorage.load({
       key: 'lang',
       autoSync: true,
     }).then( ret => {
       I18n.locale  = `${ret.selectedLan}`
-      // this.props.dispatch(switchLanguageAction(ret.selectedLan))
     }).catch (err => {
-      this.setDefaultLang()
+      // this.setDefaultLang()
     })
-    
+  }
+
+
+
+  onDrop1 = () => {
+    accountDB.dropTable({
+      sql: 'drop table token'
+    })
+  }
+  onDrop2 = () => {
+    accountDB.dropTable({
+      sql: 'drop table account'
+    })
+  }
+  onDrop3 = () => {
+    accountDB.dropTable({
+      sql: 'drop table trading'
+    })
   }
   
   componentDidMount(){
-    // tSqLite.deleteData()
-    // tSqLite.dropTable()
-    // tkSqLite.deleteData()
-    // tkSqLite.dropTable()
-  //   sqLite.dropTable()
-  //   sqLite.deleteData()    
-
-    setTimeout(() => {
-      if(!db){  
-        db = sqLite.open();  
-      }  
-      db.transaction((tx) => {
-        tx.executeSql("select * from account ", [], (tx,results) => {
-
-          let len = results.rows.length 
-          let allAccounts = [] 
-          for(let i=0; i<len; i++){  
-            let u = results.rows.item(i)
-            allAccounts.push(u)
-            this.updateAssetsTotal(u)
-          } 
-          this.props.dispatch(getAccountInfoAction(allAccounts))
-          toHome()
-        },(error) => {
-          toLogin()
-        })
-      })
-
-    },2000)
+    this.getAccounts()
   } 
-
-  setDefaultLang = () => {
-    I18n.locale  = 'en-US'
-    localStorage.save({
-      key: 'lang',
-      data:{
-        selectedLan: 'en-US'
-      }
+  async getAccounts(){
+    let res = await accountDB.selectTable({
+      sql: 'select id,address,account_name from account',
+      parame: []
     })
-  }
+    if(res.length === 0){
+      //还没有账户信息
+      toLogin()  
+      launchImage.hide();
+      return;
+      //此时  没有任何账户信息  
 
-  componentWillReceiveProps(nextProps){
-    if(nextProps.accountManageReducer.passAccInfoSuc === 'login'){
-      toLogin()
     }else{
-      if(nextProps.accountManageReducer.passAccInfoSuc === 'home'){
-        toHome()
-      }
+      console.log('select语句结果',res)
+
+      this.updateAssetsTotal(res)
+
     }
   }
+  async updateAssetsTotal(infos){
+    let updateRes = false
+    for(let i = 0; i < infos.length; i ++){
+      let balance = await web3.eth.getBalance(`0x${infos[i].address}`)
+      let newTotal = web3.utils.fromWei(balance,'ether')
 
-  async updateAssetsTotal(val){
-    let res = await web3.eth.getBalance(`0x${val.address}`)
-    let newTotal = web3.utils.fromWei(res,'ether')
-    // let newTotal = '0.9348' // "0.0352"
-    let name = val.account_name
-    db.transaction((tx) => {
-      tx.executeSql(" update account set assets_total = ? where account_name = ? ",[newTotal,name],(tx,results) => {
-
-      },(error) => {
-        console.log(error)
+      updateRes = await accountDB.updateTable({
+        sql: 'update account set assets_total = ? where account_name = ?',
+        parame:[newTotal, infos[i].account_name]
       })
-    })     
-  }
+    }
 
-  compennetWillUnmount(){  
-    sqLite.close();  
-  } 
+    console.log('更新结果',updateRes)
+    if(updateRes === 'success'){
+      // setTimeout(() => {
+      toHome()
+      launchImage.hide();
+      return;
+      // },1000)
+    }else{
+      console.log('还没有更新完')
+    }
+  }
+  // setDefaultLang = () => {
+  //   I18n.locale  = 'en-US'
+  //   localStorage.save({
+  //     key: 'lang',
+  //     data:{
+  //       selectedLan: 'en-US'
+  //     }
+  //   })
+  // }
+
 
   render(){
   	return(
       <View style={{flex:1}}>
-      	 <Image source={require('../images/xhdpi/splash.png')} style={{width: '100%', height:'100%'}}/>
+        {
+          Platform.OS === 'ios' ?
+          <StatusBar backgroundColor="#FFFFFF"  barStyle="light-content" hidden={true} />
+          : null
+        }
+         {
+           Platform.OS == 'ios' ?
+           null :
+           <Image source={require('../images/xhdpi/splash.png')} style={{width: '100%', height:'100%'}}/>
+         }
       </View>
   	)
   }

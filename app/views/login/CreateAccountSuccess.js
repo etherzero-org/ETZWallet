@@ -6,13 +6,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  BackHandler
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle } from '../../styles/'
 import { setScaleText, scaleSize } from '../../utils/adapter'
 import { Btn } from '../../components/'
-import { toSplash } from '../../root'
+import { toHome } from '../../root'
 import I18n from 'react-native-i18n'
+import { onExitApp } from '../../utils/exitApp'
 class CreateAccountSuccess extends Component{
   constructor(props){
     super(props)
@@ -22,35 +24,31 @@ class CreateAccountSuccess extends Component{
     }
     this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this))
   }
-  
+  componentWillMount(){
+    BackHandler.addEventListener('hardwareBackPress',this.onBack)
+  }
+  componentWillUnmount () {
+    BackHandler.removeEventListener('hardwareBackPress',this.onBack)
+  }
+  onBack = () => {
+    onExitApp()
+  }
   onNavigatorEvent(event){
-    if (event.type == 'NavBarButtonPress') {
-      if(event.id === 'backPress'){
-          toSplash()
-      }
-    }
+    // if (event.type == 'NavBarButtonPress') {
+    //   if(event.id === 'backPress'){
+    //       toHome()
+    //   }
+    // }
+    // if(event.type == 'ScreenChangedEvent'){   //成功后点击返回到首页
+    //   if(event.id == 'willDisappear'){
+    //     toHome()
+    //   }
+    // }
   }
 
 
   onPressBackUp = () => {
-    toSplash()
-    // this.props.navigator.push({
-    //   screen: 'back_up_account',
-    //   title: 'username',
-    //   navigatorStyle: DetailNavigatorStyle,
-    //   // passProps: {
-    //   //   userName: userName,
-    //   //   address: `0x${addressText}`
-    //   // },
-    //   navigatorButtons: {
-    //     rightButtons: [
-    //       {
-    //         title: 'Save',
-    //         id: 'save_back_up_info'
-    //       }
-    //     ]
-    //   }
-    // })
+    toHome()
   }
   render(){
     return(

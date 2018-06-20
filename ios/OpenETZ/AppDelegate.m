@@ -11,7 +11,7 @@
 #import <React/RCTBundleURLProvider.h>
 
 #import "RCCManager.h"
-
+#import "RNLaunchImage.h"
 #import <React/RCTRootView.h>
 
 @implementation AppDelegate
@@ -28,6 +28,7 @@
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   self.window.backgroundColor = [UIColor whiteColor];
   [[RCCManager sharedInstance] initBridgeWithBundleURL:jsCodeLocation launchOptions:launchOptions];
+  [RNLaunchImage wait];   // <-- 加入这一行。这必须是这个方法return之前的最后一行
   return YES;
 }
 

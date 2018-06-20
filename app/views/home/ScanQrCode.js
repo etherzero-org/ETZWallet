@@ -7,29 +7,40 @@ import {
   StyleSheet,
   TextInput
 } from 'react-native'
+import { Navigation } from 'react-native-navigation'
 
 import { pubS,DetailNavigatorStyle } from '../../styles/'
 import { setScaleText, scaleSize } from '../../utils/adapter'
 import QRCodeScanner from 'react-native-qrcode-scanner'
 import I18n from 'react-native-i18n'
+import { passReceiveAddressAction } from '../../actions/accountManageAction'
+import { connect } from 'react-redux'
 class ScanQrCode extends Component{
   constructor(props){
     super(props)
-    this.state = {
 
-    }
   }
+  
   onSuccess = (e) => {
-    this.props.navigator.push({
-      screen: 'on_payment',
-      title:I18n.t('send'),
-      navigatorStyle: DetailNavigatorStyle,
-      overrideBackPress: true,
-      passProps: {
-        receive_address: e.data,
-        curToken: 'ETZ',
-      }
-    })
+    
+    if(this.props.fromHome){
+      this.props.navigator.push({
+        screen: 'on_payment',
+        title:I18n.t('send'),
+        backButtonTitle:I18n.t('back'),
+        backButtonHidden:false,
+        navigatorStyle: Object.assign({},DetailNavigatorStyle,{
+          navBarHidden: true
+        }),
+        passProps:{
+          curToken: 'ETZ',
+          scanSucAddr: e.data,
+        }
+      })
+    }else{
+      this.props.dispatch(passReceiveAddressAction(e.data,this.props.curToken))
+      this.props.navigator.pop()
+    }
   }
 
   onCancel = () => {
@@ -47,7 +58,7 @@ class ScanQrCode extends Component{
             )}
             customMarker={(
               <View style={{height:scaleSize(390),width:scaleSize(390),alignSelf:'center'}}>
-
+              
               </View>
             )}
             cameraStyle={{backgroundColor:'transparent'}}
@@ -64,4 +75,8 @@ const styles = StyleSheet.create({
 
 });
 
-export default ScanQrCode
+export default connect(
+  state => ({
+    accountManageReducer: state.accountManageReducer
+  })
+)(ScanQrCode)

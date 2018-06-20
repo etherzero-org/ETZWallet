@@ -9,7 +9,7 @@ import {
 import { Navigation } from 'react-native-navigation'
 import { registerScreens, registerScreenVisibilityListener, } from './config/'
 import { getPixelRatio } from './utils/adapter'
-import { TabBarAppStyle,AssetsNavStyle,MainThemeNavColor } from './styles/'
+import { TabBarAppStyle,AssetsNavStyle,MainThemeNavColor,TabBarIOSStyle } from './styles/'
 import I18n from 'react-native-i18n'
 registerScreens()
 registerScreenVisibilityListener()
@@ -59,11 +59,19 @@ const tabs = [
 ]
 
 function toHome () {
+   if(Platform.OS == 'ios'){
+    return Navigation.startTabBasedApp({
+      tabs,
+      // appStyle: TabBarAppStyle,
+      tabsStyle: TabBarIOSStyle,
+    })
+   }else{
+    return Navigation.startTabBasedApp({
+      tabs,
+      appStyle: TabBarAppStyle,
+    })
+   }
 
-   return Navigation.startTabBasedApp({
-            tabs,
-            appStyle: TabBarAppStyle,
-          })
 
 }
 
@@ -77,7 +85,7 @@ function toLogin () {
 }
 
 function toSplash () {
-  Navigation.startSingleScreenApp({
+  return Navigation.startSingleScreenApp({
     screen: {
       screen: 'splash',
       navigatorStyle: {navBarHidden: true,statusBarColor:'#144396'},

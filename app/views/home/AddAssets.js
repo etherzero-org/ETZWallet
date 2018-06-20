@@ -6,60 +6,69 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  ScrollView
+  ScrollView,
+  RefreshControl,
+  StatusBar,
+  Platform
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle } from '../../styles/'
-import { setScaleText, scaleSize } from '../../utils/adapter'
+import { setScaleText, scaleSize,ifIphoneX } from '../../utils/adapter'
 import { connect } from 'react-redux'
 import { Loading } from '../../components/'
-import { getAssetsListAction,deleteSelectedToListAction, addSelectedToListAction } from '../../actions/tokenManageAction'
-import TokenSQLite from '../../utils/tokenDB'
-const tkSqLite = new TokenSQLite()
-let tk_db
+import { deleteSelectedToListAction, addSelectedToListAction,fetchTokenAction,gloablTokenList } from '../../actions/tokenManageAction'
+
 import I18n from 'react-native-i18n'
+import accountDB from '../../db/account_db'
+
 class AddAssets extends Component{
   constructor(props){
     super(props)
     this.state={
-      assetsList: [],
-      selectedContainer: []
+      tokenList: [],
+      // loadingVisible: false,
+      isRefreshing: false,
     }
     this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this))
   }
 
-  componentWillMount(){
-    // this.props.dispatch(getAssetsListAction())
-    const { selectedContainer } = this.state 
-    if(!tk_db){
-       tk_db = tkSqLite.open()
+  componentDidMount(){
+    this.onFetch()
+  }
+  componentWillReceiveProps(nextProps){
+    if(this.props.tokenManageReducer.fetchTokenList !== nextProps.tokenManageReducer.fetchTokenList){
+      this.setState({
+        isRefreshing: false
+      })
     }
+  }
+  async onFetch(){
+    //fetch token列表 并通过当前账户地址得到 token账户余额
     
-    tk_db.transaction((tx) => {
-       tx.executeSql(" select * from token ",[], (tx,results)=>{
-          let len = results.rows.length,
-              resArr = [];
-          for(let i = 0; i < len; i ++){
-            resArr.push(results.rows.item(i)) 
-          } 
-          console.log('resArr===',resArr)
-          this.setState({
-            assetsList: resArr
-          })
-
-          this.state.assetsList.map((val,index) => {
-            if(val.tk_selected === 1){
-              selectedContainer.push(val.tk_address)
-              this.setState({
-                selectedContainer
-              })
-            }
-          })
-
-       },error => {
-        console.error('search token error',error)
-       })
+    const { currentAccount } = this.props.accountManageReducer
+    // console.log('添加资产当前账号currentAccount===',currentAccount)
+    let selTokenRes = await accountDB.selectTable({
+      sql: 'select * from token where account_addr = ?',
+      parame: [currentAccount.address]
     })
+    //如果token list已经有数据  那么不需要再去 fetch数据  不需要再去插入数据  只需要将查询到的selTokenRes放在reducers中 全局使用
+    //切换账号后需要更新  当前账号下的token list
+    // console.log('selTokenRes11111111===',selTokenRes)
+    if(selTokenRes.length === 0){
+      this.setState({
+        isRefreshing: true
+      })
+      this.props.dispatch(fetchTokenAction(currentAccount.address,false))
+    }else{
+      this.props.dispatch(gloablTokenList(selTokenRes))
+    }
+
+    // const { fetchTokenList } = this.props.tokenManageReducer
+    // if(fetchTokenList.length === 0){
+    //   this.props.dispatch(fetchTokenAction(currentAccount.address))
+    // }else{
+    //   this.props.dispatch(gloablTokenList(fetchTokenList))
+    // }
   }
   onNavigatorEvent(event){
     if (event.type == 'NavBarButtonPress') {
@@ -69,52 +78,54 @@ class AddAssets extends Component{
     }
   }
 
-  onPressSelect = (addr,selected) => {
-    const { selectedContainer,assetsList } = this.state
-    if(selected){//取消选中
-      selectedContainer.splice(selectedContainer.indexOf(addr),1)
-      this.setState({
-        selectedContainer
-      })
-      this.props.dispatch(deleteSelectedToListAction(addr,assetsList))
-
-    }else{//选中
-      selectedContainer.push(addr)
-      this.setState({
-        selectedContainer
-      })
-      this.props.dispatch(addSelectedToListAction(addr,assetsList))
+  onPressSelect = (pressAddr,selected) => {
+    const { currentAccount } = this.props.accountManageReducer
+    if(selected){
+      this.props.dispatch(deleteSelectedToListAction(pressAddr,currentAccount.address))
+    }else{
+      this.props.dispatch(addSelectedToListAction(pressAddr,currentAccount.address))
     }
-
-    // assetsList.map((val,index) => {
-    //   if(val.tk_address === selectedContainer[index]){
-    //     this.props.dispatch(selectedTokenListAction(val))
-    //   }
-    // })
   }
+  onRefresh = () => {
+    const { currentAccount } = this.props.accountManageReducer
+    this.setState({
+      isRefreshing: true
+    })
+    this.props.dispatch(fetchTokenAction(currentAccount.address,true))
 
+  }
   render(){
     let selected = false
-    // const { assetsList,isLoading } = this.props.tokenManageReducer
-    const { selectedContainer,assetsList } = this.state
-    // console.log('资产列表',assetsList)
+    const { fetchTokenList } = this.props.tokenManageReducer
+    console.log('资产列表fetchTokenList===',fetchTokenList)
     return(
       <View style={{flex:1,backgroundColor:'#F5F7FB'}}>
-
-        <View style={[styles.listItemView,styles.whStyle]}>
-          <Image source={require('../../images/xhdpi/etz_logo.png')} style={pubS.logoStyle}/>
-          <View style={[styles.listItemTextView,pubS.rowCenterJus]}>
-            <View>
-              <Text style={pubS.font36_2}>ETZ</Text>
-              <Text style={pubS.font24_2}>EtherZero</Text>
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.isRefreshing}
+              onRefresh={this.onRefresh}
+              tintColor={"#144396"}
+              title={I18n.t('loading')}
+              colors={['#fff']}
+              progressBackgroundColor={"#1d53a6"}
+            />
+          }
+        >
+          <View style={[styles.listItemView,styles.whStyle]}>
+            <Image source={require('../../images/xhdpi/etz_logo.png')} style={pubS.logoStyle}/>
+            <View style={[styles.listItemTextView,pubS.rowCenterJus]}>
+              <View>
+                <Text style={pubS.font36_2}>ETZ</Text>
+                <Text style={pubS.font24_2}>EtherZero</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
           {
-            assetsList.map((res,index) => {
-              if(selectedContainer.indexOf(res.tk_address) !== -1){
+            fetchTokenList.map((res,index) => {
+              if(res.tk_selected === 1){
                 selected = true
               }else{
                 selected = false
@@ -160,8 +171,7 @@ const styles = StyleSheet.create({
   },
   listItemView:{
     backgroundColor:'#fff',
-    paddingLeft: scaleSize(22),
-    paddingRight: scaleSize(22),
+    ...ifIphoneX({marginLeft:30,marginRight:30},{paddingLeft: scaleSize(22),paddingRight: scaleSize(22)},{paddingLeft: scaleSize(22),paddingRight: scaleSize(22)}),
     justifyContent:'center',
     flexDirection:'row',
     borderRadius: 4,
@@ -169,21 +179,49 @@ const styles = StyleSheet.create({
     marginTop: scaleSize(20),
   },
   whStyle: {
-    height: scaleSize(120),
-    width: scaleSize(702),
+    ...ifIphoneX(
+      {
+        height: scaleSize(120),
+        width: 345,
+      },
+      {
+        height: scaleSize(120),
+        width: scaleSize(702),
+      },
+      {
+        height: scaleSize(120),
+        width: scaleSize(702),
+      }
+    )
+
   },
   listItemTextView:{
-    width: scaleSize(618),
-    marginLeft:scaleSize(18),
-    paddingTop: scaleSize(15),
-    paddingBottom: scaleSize(22),
-    // borderColor:'red',
-    // borderWidth:1,
+    ...ifIphoneX(
+      {
+        width: 293,
+        marginLeft:scaleSize(18),
+        paddingTop: scaleSize(15),
+        paddingBottom: scaleSize(22),
+      },
+      {
+        width: scaleSize(618),
+        marginLeft:scaleSize(18),
+        paddingTop: scaleSize(15),
+        paddingBottom: scaleSize(22),
+      },
+      {
+        width: scaleSize(618),
+        marginLeft:scaleSize(18),
+        paddingTop: scaleSize(15),
+        paddingBottom: scaleSize(22),
+      }
+    )
   },
 })
 
 export default connect(
   state => ({
-    tokenManageReducer: state.tokenManageReducer
+    tokenManageReducer: state.tokenManageReducer,
+    accountManageReducer: state.accountManageReducer
   })
 )(AddAssets)

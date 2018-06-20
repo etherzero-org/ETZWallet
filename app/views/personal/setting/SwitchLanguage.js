@@ -6,15 +6,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  StatusBar,
+  Platform
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle } from '../../../styles/'
-import { setScaleText, scaleSize } from '../../../utils/adapter'
+import { setScaleText, scaleSize,ifIphoneX } from '../../../utils/adapter'
 import { switchLanguageAction } from '../../../actions/switchLanguageAction'
 import { connect } from 'react-redux' 
 import { toSplash } from '../../../root' 
 import I18n from 'react-native-i18n'
-
 class Language extends Component {
 	constructor(props){
 		super(props)
@@ -65,32 +66,51 @@ class SwitchLanguage extends Component{
 	    		})
 
 				this.props.dispatch(switchLanguageAction(this.state.selectedLan))
-
 				toSplash()
 	    	}
 	  	}
 	}
 	componentWillMount(){
-  		localStorage.load({
-  			key:'lang',
-  			autoSync: true,
-  		}).then( ret => {
-  			switch(ret.selectedLan){
-  				case 'zh-CN':
-  					this.onSelectZh()
-  					break
-  				case 'en-US':
-  					this.onSelectEn()
-  					break
-  				case 'ru-RU':
-  					this.onSelectRu()
-  					break
-  				default:
-  					break
-  			}
-  		}).catch( err => {
+		console.log('languages======',I18n.currentLocale())
 
-  		})
+  // 		localStorage.load({
+  // 			key:'lang',
+  // 			autoSync: true,
+  // 		}).then( ret => {
+  			
+  // 		}).catch( err => {
+
+  // 		})
+  	// 	if(Platform.OS === 'ios'){
+	  // 		switch(I18n.currentLocale()){
+			// 	case 'zh-Hans-US':
+			// 		this.onSelectZh()
+			// 		break
+			// 	case 'en':
+			// 		this.onSelectEn()
+			// 		break
+			// 	case 'ru-RU':
+			// 		this.onSelectRu()
+			// 		break
+			// 	default:
+			// 		break
+			// }
+  	// 	}else{
+  			switch(I18n.currentLocale()){
+				case 'zh-CN':
+					this.onSelectZh()
+					break
+				case 'en-US':
+					this.onSelectEn()
+					break
+				case 'ru-RU':
+					this.onSelectRu()
+					break
+				default:
+					break
+			}
+  		// }
+  			
   	}
 
 	onSelectZh = () => {
@@ -125,26 +145,31 @@ class SwitchLanguage extends Component{
 			})
 		}
 	}
-	// onSelectRu = () => {
-	// 	if(!this.state.select_ru){
-	// 		this.setState({
-	// 			select_zh: false,
-	// 	  		select_en: false,
-	// 	  		select_ru: true,
-				// bgColorZh: '#fff',
-				// bgColorEn: '#fff',
-				// bgColorRu: '#eee',
-	// 		},() => {
-	// 			this.setState({
-	// 				selectedLan: 'ru-RU'
-	// 			})
-	// 		})
-	// 	}
-	// }
+	onSelectRu = () => {
+		if(!this.state.select_ru){
+			this.setState({
+				select_zh: false,
+		  		select_en: false,
+		  		select_ru: true,
+				bgColorZh: '#fff',
+				bgColorEn: '#fff',
+				bgColorRu: '#eee',
+			},() => {
+				this.setState({
+					selectedLan: 'ru-RU'
+				})
+			})
+		}
+	}
   	render(){
   		const { select_zh, select_en, select_ru,bgColorZh, bgColorEn, bgColorRu } = this.state
 	    return(
 	      <View style={{flex:1,backgroundColor: '#F5F7FB'}}>
+	      	{
+	          Platform.OS === 'ios' ?
+			  <StatusBar backgroundColor="#000000"  barStyle="dark-content" animated={true} />
+	          : null
+	        }
 	      	<Language
 	      		languageText={'简体中文'}
 	      		isSelected={select_zh}
@@ -162,7 +187,7 @@ class SwitchLanguage extends Component{
 		      	// 	languageText={'Русский язык'}
 		      	// 	isSelected={select_ru}
 		      	// 	onSelect={this.onSelectRu}
-		      		// bgColor={bgColorRu}
+		      	// 	bgColor={bgColorRu}
 		      	// />
 	      	}
 	      </View>
@@ -172,11 +197,29 @@ class SwitchLanguage extends Component{
 
 const styles = StyleSheet.create({
 	lanViewStyle:{
-		height: scaleSize(120),
-		width: scaleSize(750),
-		// backgroundColor:'#fff',
-		borderTopWidth:StyleSheet.hairlineWidth,
-		borderColor:'#EEEEEE',
+		...ifIphoneX(
+			{
+				height: scaleSize(120),
+				width: 375,
+				// backgroundColor:'#fff',
+				borderTopWidth:StyleSheet.hairlineWidth,
+				borderColor:'#EEEEEE',
+			},
+			{
+				height: scaleSize(120),
+				width: scaleSize(750),
+				// backgroundColor:'#fff',
+				borderTopWidth:StyleSheet.hairlineWidth,
+				borderColor:'#EEEEEE',
+			},
+			{
+				height: scaleSize(120),
+				width: scaleSize(750),
+				// backgroundColor:'#fff',
+				borderTopWidth:StyleSheet.hairlineWidth,
+				borderColor:'#EEEEEE',
+			},
+		)
 	},
 	selectImage:{
 	    height: scaleSize(40),

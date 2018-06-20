@@ -6,19 +6,18 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  BackHandler,
+  Button
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle } from '../../../styles/'
 import { setScaleText, scaleSize } from '../../../utils/adapter'
-import { Btn } from '../../../components/'
-import { deleteMnemonicAction, resetDeleteStatusAction } from '../../../actions/accountManageAction'
+import { Btn,Loading } from '../../../components/'
+import { deleteMnemonicAction, resetDeleteStatusAction,createAccountAction } from '../../../actions/accountManageAction'
 import Modal from 'react-native-modal'
-import { connect } from 'react-redux'
-import UserSQLite from '../../../utils/accountDB'
-const sqLite = new UserSQLite()  
-let db  
+import { connect } from 'react-redux' 
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
+import Toast from 'react-native-root-toast'
 class VerifyMnemonic extends Component{
 	constructor(props){ 
 		super(props)
@@ -29,41 +28,85 @@ class VerifyMnemonic extends Component{
 			selectedContainer: [],
 			selectedString: '',
 			compareString: '',
+			loadingVisible: false
 		}
+		this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this))
 	}
 
 	componentDidMount(){
 		let arr = [],
 			mneArr = [];
 		arr = this.props.mnemonicText.split(" ")
+        console.log('arr===',arr)
 		for(let i = 0; i < arr.length; i ++){
                mneArr.push({
                        idx:i,
                        val: arr[i]
                })
         }
+        console.log('mneArr===',mneArr)
         let newMnemonic = this.shuffle(mneArr)
-
+        console.log('newMnemonic===',newMnemonic)
 		this.setState({
 			mnemonicArr: newMnemonic
 		})
 	}
 	
 	componentWillReceiveProps(nextProps){
-		if(this.props.accountManageReducer.delMnemonicSuc !== nextProps.accountManageReducer.delMnemonicSuc && nextProps.accountManageReducer.delMnemonicSuc){
-			this.props.dispatch(resetDeleteStatusAction())
-			this.props.navigator.pop()
-		}
-	}
-	shuffle = (arr) => {
-	    let i = arr.length;
-	    while (i) {
-	        let j = Math.floor(Math.random() * i--)
-	        [arr[j], arr[i]] = [arr[i], arr[j]]
-			
+		// if(this.props.accountManageReducer.delMnemonicSuc !== nextProps.accountManageReducer.delMnemonicSuc && nextProps.accountManageReducer.delMnemonicSuc){
+		// 	this.props.dispatch(resetDeleteStatusAction())
+		// 	this.props.navigator.pop()
+		// }
+		if(this.props.accountManageReducer.createSucc !== nextProps.accountManageReducer.createSucc && nextProps.accountManageReducer.createSucc){
+	      this.setState({
+	        loadingVisible: false
+	      })
+	      let t = Toast.show(I18n.t('create_account_successfully'))
+		  setTimeout(() => {
+		   		Toast.hide(t)
+		  },1000)
+
+	      this.props.navigator.push({
+	        screen: 'create_account_success',
+	        navigatorStyle: DetailNavigatorStyle,
+	        backButtonTitle:I18n.t('back'),
+	        backButtonHidden:false,
+	        overrideBackPress: true,
+	      })
 	    }
-	    return arr
+	}	
+	onNavigatorEvent(event){
+		switch (event.id) {
+	      case 'willAppear':
+	        this.backHandler = BackHandler.addEventListener('hardwareBackPress', this.handleBackPress)
+	        break
+	      case 'willDisappear':
+	        this.backHandler.remove()
+	        break
+	      default:
+	        break
+	    }
 	}
+	handleBackPress = () => {
+		BackHandler.exitApp()
+	}
+	shuffle = (array) => {
+	  var currentIndex = array.length, temporaryValue, randomIndex;
+
+	  while (0 !== currentIndex) {
+
+	    randomIndex = Math.floor(Math.random() * currentIndex)
+	    currentIndex -= 1
+
+	    temporaryValue = array[currentIndex]
+	    array[currentIndex] = array[randomIndex]
+	    array[randomIndex] = temporaryValue
+	  }
+
+	  return array
+	}
+
+
 
 	onSelectItem = (item,selected) => {
 		const { selectedContainer,selectedString, compareString } = this.state
@@ -102,10 +145,14 @@ class VerifyMnemonic extends Component{
 
 	onConfirm = () => {
 		const { selectedContainer, compareString} = this.state
+		this.setState({
+			loadingVisible: false
+		})
 		if(this.props.mnemonicText.split(" ").toString() === compareString.slice(1,)){
-			this.setState({
-				visible: true
-			})
+			// this.setState({
+			// 	visible: true,
+			// })
+			this.onCreateAction()
 		}else{
 			Alert.alert(
 		        '',
@@ -126,21 +173,37 @@ class VerifyMnemonic extends Component{
 			selectedContainer: []
 		})
 	}
-	onModalBtn = () => {
-		this.onHide()
 
-		setTimeout(() => {
-			this.props.dispatch(deleteMnemonicAction(this.props.currentAddress))
-		},1000)
+	onCreateAction = () => {
+		const { mnemonicValue, create_usernane, create_psd, create_prompt,create_from } = this.props.accountManageReducer
+		this.setState({
+			loadingVisible: true,
+			// visible: false,
+			selectedContainer: []
+		},() => {
+		    setTimeout(() => {
+		      this.props.dispatch(createAccountAction({
+		      	mnemonicValue: mnemonicValue,
+		        userNameVal: create_usernane,
+		        psdVal: create_psd,
+		        promptVal: create_prompt,
+		        from: create_from
+		      }))
+		    },1000)
+		})
 
+		// this.props.navigator.popToRoot({ animated: false })
 		
 
 	}
     render(){
-    	const { isEmpty, mnemonicArr, visible, selectedContainer, selectedString} = this.state
+    	const { isEmpty, mnemonicArr, visible, selectedContainer, selectedString, loadingVisible} = this.state
     	let selected = false
+    	const { delMnemonicSuc } = this.props.accountManageReducer
+    	console.log('delMnemonicSuc===',delMnemonicSuc)
 	    return(
 	    	<View style={[{flex:1,backgroundColor:'#F5F7FB',alignItems:'center'},pubS.paddingRow35]}>
+	    		<Loading loadingVisible={loadingVisible} loadingText={I18n.t('creating')}/>
 	    		<View style={[styles.selectViewBox,pubS.center,pubS.paddingRow35]}>
 	    			{
 	    				isEmpty ? 
@@ -177,7 +240,6 @@ class VerifyMnemonic extends Component{
 			        isVisible={visible}
 			        onBackButtonPress={this.onHide}
 			        onBackdropPress={this.onHide}
-			        style={styles.modalView}
 			        backdropOpacity={.8}
 			      >
 					 <View style={[{backgroundColor:'#fff',},pubS.center,styles.modalView]}>

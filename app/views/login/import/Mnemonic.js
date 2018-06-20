@@ -6,22 +6,24 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Platform,
+  Keyboard
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle } from '../../../styles/'
-import { setScaleText, scaleSize } from '../../../utils/adapter'
+import { setScaleText, scaleSize,ifIphoneX,isIphoneX } from '../../../utils/adapter'
 import { TextInputComponent,Btn,Loading } from '../../../components/'
-import { importAccountAction,resetDeleteStatusAction } from '../../../actions/accountManageAction'
+import { importAccountAction,resetDeleteStatusAction,showImportLoadingAction } from '../../../actions/accountManageAction'
 import { connect } from 'react-redux'
-import { toSplash } from '../../../root'
+import { toHome } from '../../../root'
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+const bip39 = require('bip39')
+
 class Mnemonic extends Component{
   constructor(props){
     super(props)
     this.state={
-      visible: false,
-      // mnemonicVal: 'rhythm example taxi leader divorce prosper arm add tower snake domain still',
       mnemonicVal: '',
       mnemonicValWarning: '',
       passwordVal: '',
@@ -30,26 +32,10 @@ class Mnemonic extends Component{
       rePsdWarning: '',
       userNameVal: '',
       userNameWarning: '',
+      hintValue: '',
     }
   }
 
-  componentWillReceiveProps(nextProps){
-    if(nextProps.accountManageReducer.importStatus !== this.props.accountManageReducer.importStatus){
-      this.setState({
-        visible: false
-      })
-      if(nextProps.accountManageReducer.importStatus === 'success'){
-        Toast.showLongBottom(I18n.t('import_successful'))
-        setTimeout(() => {
-          toSplash()
-        },100)
-      }else{
-        if(nextProps.accountManageReducer.importStatus === 'fail'){
-          Toast.showLongBottom(I18n.t('import_fail'))
-        }
-      }
-    }
-  }
 
   onChangeMemonic = (val) => {
     this.setState({
@@ -77,17 +63,18 @@ class Mnemonic extends Component{
   }
   onPressImport = () => {
    const { mnemonicVal, mnemonicValWarning, passwordVal, passwordWarning, repeadPsdVal, rePsdWarning,userNameVal } = this.state
-   let psdReg = /^(?![a-zA-z]+$)(?!\d+$)(?![!@#$%^&*]+$)[a-zA-Z\d!@#$%^&*]{8,}$/
+   let psdReg = /^(?![a-zA-z]+$)(?!\d+$)(?![!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]+$)[a-zA-Z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{8,}$/   
    if(userNameVal.length === 0){
       this.setState({
         userNameWarning: I18n.t('enter_account_name'),
       })
     }else{
-      if(mnemonicVal.length === 0){
+      if(!bip39.validateMnemonic(mnemonicVal)){
         this.setState({
           mnemonicValWarning: I18n.t('mnemonic_phrase_warning'),
         })
       }else{
+        
         if(!psdReg.test(passwordVal)){
           this.setState({
             passwordWarning: I18n.t('password_verification'),
@@ -106,64 +93,124 @@ class Mnemonic extends Component{
   }
 
   onImport = () => {
-    const { mnemonicVal, passwordVal, userNameVal} = this.state  
-    this.setState({
-      visible: true
-    })
+    const { mnemonicVal, passwordVal, userNameVal, hintValue} = this.state  
+    const { globalAccountsList } = this.props.accountManageReducer
+    this.props.dispatch(showImportLoadingAction(true))
     setTimeout(() => {
-      this.props.dispatch(importAccountAction({
-        mnemonicVal,
-        mnemonicPsd: passwordVal,
-        mnemonicUserName: userNameVal,
-        type: 'mnemonic',
-      }))
-    },1000)
-    
+      if(bip39.validateMnemonic(mnemonicVal)){
+        this.props.dispatch(importAccountAction({
+          mnemonicVal,
+          mnemonicPsd: passwordVal,
+          mnemonicUserName: userNameVal,
+          type: 'mnemonic',
+          fromLogin: this.props.fromLogin === 'login' ? 'login' : 'accounts',
+          accountsList: globalAccountsList,
+          hintValue
+        }))
+      }else{
+        this.props.dispatch(showImportLoadingAction(false))
+        this.setState({
+          mnemonicValWarning: I18n.t('mnemonic_phrase_warning'),
+        })
+      }
+    },1000)   
   }
-  render(){
-    const { mnemonicVal, mnemonicValWarning, passwordVal, passwordWarning, repeadPsdVal, rePsdWarning,userNameVal, userNameWarning } = this.state
-    return(
-      <View style={pubS.container}>
-        <Loading loadingVisible={this.state.visible} loadingText={I18n.t('loading_importing_account')}/>
-        <TextInputComponent
-          placeholder={I18n.t('account_name')}
-          value={userNameVal}
-          onChangeText={this.onChangeUseNameText}
-          warningText={userNameWarning}//
-        />
-        <TextInputComponent
-          isMultiline={true}
-          placeholder={I18n.t('mnemonic_phrase_1')}
-          value={mnemonicVal}
-          onChangeText={this.onChangeMemonic}
-          warningText={mnemonicValWarning}
-          iptMarginTop={scaleSize(60)}
-        />
-        <TextInputComponent
-          placeholder={I18n.t('password')}
-          value={passwordVal}
-          onChangeText={this.onChangPassword}
-          secureTextEntry={true}
-          warningText={passwordWarning}
-        />
-       
-        <TextInputComponent
-          placeholder={I18n.t('repeat_password')}
-          value={repeadPsdVal}
-          onChangeText={this.onChangeRePassword}
-          secureTextEntry={true}
-          warningText={rePsdWarning}
-        />
 
-        <Btn
-          btnMarginTop={scaleSize(60)}
-          btnPress={this.onPressImport}
-          btnText={I18n.t('import')}
-        />
+  onChangeHint = (val) => {
+    this.setState({
+      hintValue: val
+    })
+  }
+
+
+  render(){
+    isIphoneX() ?    //判断IPONEX
+    this.state.DEFULT_IPONEX = 345
+    : this.state.DEFULT_IPONEX = scaleSize(680);
+    const { mnemonicVal, mnemonicValWarning, passwordVal, passwordWarning, repeadPsdVal, rePsdWarning,userNameVal, userNameWarning,DEFULT_IPONEX,hintValue } = this.state
+    return(
+      <View style={styles.container}>
+        <ScrollView
+
+        >
+          <KeyboardAwareScrollView
+            style={{ backgroundColor: '#fff' }}
+            enableOnAndroid={true}
+            scrollToEnd={true}
+            enableResetScrollToCoords={true}
+          >
+            <TextInputComponent
+              placeholder={I18n.t('account_name')}
+              value={userNameVal}
+              onChangeText={this.onChangeUseNameText}
+              warningText={userNameWarning}//
+            />
+            <TextInputComponent
+              isMultiline={true}
+              placeholder={I18n.t('mnemonic_phrase_1')}
+              value={mnemonicVal}
+              onChangeText={this.onChangeMemonic}
+              warningText={mnemonicValWarning}
+              iptMarginTop={scaleSize(60)}
+              
+            />
+            <TextInputComponent
+              placeholder={I18n.t('password')}
+              value={passwordVal}
+              onChangeText={this.onChangPassword}
+              secureTextEntry={true}
+              warningText={passwordWarning}
+            />
+           
+            <TextInputComponent
+              placeholder={I18n.t('repeat_password')}
+              value={repeadPsdVal}
+              onChangeText={this.onChangeRePassword}
+              secureTextEntry={true}
+              warningText={rePsdWarning}
+            />
+            <TextInputComponent
+              placeholder={I18n.t('password_hint')}
+              value={hintValue}
+              onChangeText={this.onChangeHint}
+            />
+            <Btn
+              btnMarginTop={scaleSize(60)}
+              btnPress={this.onPressImport}
+              btnText={I18n.t('import')}
+              btnWidth={DEFULT_IPONEX}
+            />
+          </KeyboardAwareScrollView>
+        </ScrollView>
       </View>
     )
   }
 }
+
+
+const styles = StyleSheet.create({
+  container: {
+    ...ifIphoneX(
+      {
+        flex: 1,
+        backgroundColor:'#fff',
+        width: 375
+        // width: scaleSize(750),
+      },
+      {
+        flex: 1,
+        backgroundColor:'#fff',
+        // width: scaleSize(750),
+      },
+      {
+        flex: 1,
+        backgroundColor:'#fff',
+        // width: scaleSize(750),
+      }
+    )
+  }
+
+})
 export default connect(
   state => ({
     accountManageReducer: state.accountManageReducer

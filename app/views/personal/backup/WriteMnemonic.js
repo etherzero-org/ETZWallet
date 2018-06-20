@@ -12,11 +12,7 @@ import { pubS,DetailNavigatorStyle } from '../../../styles/'
 import { setScaleText, scaleSize } from '../../../utils/adapter'
 import { connect } from 'react-redux'
 import { Btn } from '../../../components/'
-import UserSQLite from '../../../utils/accountDB'
-const sqLite = new UserSQLite()  
-let db  
 import I18n from 'react-native-i18n'
-
 class WriteMnemonic extends Component{
 	constructor(props){
 		super(props)
@@ -27,37 +23,23 @@ class WriteMnemonic extends Component{
 		}
 	}
 	componentWillMount(){
-		if(!db){  
-        	db = sqLite.open();  
-    	}
-    	db.transaction((tx)=>{  
-	      tx.executeSql("select * from account where address = ? ", [this.props.currentAddress],(tx,results)=>{  
-	        let res = results.rows.item(0)
-	        this.setState({
-	        	mnemonicText: res.mnemonic.split(" "),
-	        	originMneStr: res.mnemonic
-	        })
-	      });  
-	    },(error)=>{
-	      console.error(error)
-	    })
+    	console.log("写下主几次",this.props.mnemonicValue)
+    	this.setState({
+    		mnemonicText: this.props.mnemonicValue.split(" "),
+    		originMneStr: this.props.mnemonicValue
+    	})
 	}
-	componentWillReceiveProps(nextProps){
-		if(this.props.accountManageReducer.delMnemonicSuc !== nextProps.accountManageReducer.delMnemonicSuc && nextProps.accountManageReducer.delMnemonicSuc){
-	      this.setState({
-	        touchable: false
-	      })
-	    }
-	}
+	
 	onNextStep = () => {
-		const { mnemonicText,originMneStr } = this.state
+		const { originMneStr } = this.state
 		this.props.navigator.push({
 	      screen: 'verify_mnemonic',
-	      title: I18n.t('verify_mnemonic'),
+		  title: I18n.t('verify_mnemonic'),
+		  backButtonTitle:I18n.t('back'),
+          backButtonHidden:false,
 	      navigatorStyle: DetailNavigatorStyle,
 	      passProps: {
 	      	mnemonicText: originMneStr,
-	      	currentAddress: this.props.currentAddress
 	      }
 	    })
 	}
@@ -68,7 +50,7 @@ class WriteMnemonic extends Component{
 	      	<Text style={[pubS.font34_1,{marginTop: scaleSize(60)}]}>{I18n.t('write_down_mnemonic')}</Text>
 	      	<Text style={[pubS.font24_2,{textAlign :'center',marginTop: scaleSize(20)}]}>{I18n.t('safe_place_mnemonic')}</Text>
 	      	<View style={[styles.mneViewStyle,pubS.center]}>
-	      		<View style={[{height: scaleSize(90),width: scaleSize(600),flexDirection:'row',flexWrap: 'wrap',}]}>
+	      		<View style={[{width: scaleSize(600),flexDirection:'row',flexWrap: 'wrap',paddingTop: scaleSize(20),paddingBottom: scaleSize(20)}]}>
 		      		{
 		      			this.state.mnemonicText.map((val,index) => {
 		      				return(
@@ -80,11 +62,21 @@ class WriteMnemonic extends Component{
 		      		}
 	      		</View>
 	      	</View>
+	      	{
+	   //    	<Btn
+	   //    		btnMarginTop={scaleSize(80)}
+		  //       btnPress={touchable ? () => this.onNextStep() : () => {return}}
+		  //       bgColor={touchable ? '#2B8AFF':'#BDC0C6' }
+				// opacity={touchable ? .7 : 1}
+		  //       btnText={I18n.t('next')}
+	   //    	/>
+	      		
+	      	}
 	      	<Btn
 	      		btnMarginTop={scaleSize(80)}
-		        btnPress={touchable ? () => this.onNextStep() : () => {return}}
-		        bgColor={touchable ? '#2B8AFF':'#BDC0C6' }
-				opacity={touchable ? .7 : 1}
+		        btnPress={this.onNextStep}
+		        bgColor={'#2B8AFF'}
+				opacity={.7}
 		        btnText={I18n.t('next')}
 	      	/>
 	      </View>
@@ -93,7 +85,6 @@ class WriteMnemonic extends Component{
 }
 const styles = StyleSheet.create({
 	mneViewStyle: {
-		height: scaleSize(150),
 		width: scaleSize(680),
 		backgroundColor: '#808691',
 		borderRadius: scaleSize(10),

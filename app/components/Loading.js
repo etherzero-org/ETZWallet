@@ -3,10 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native'
 import Modal from 'react-native-modal'
 import { pubS } from '../styles/'
+import I18n from 'react-native-i18n'
 export default class Loading extends Component {
   constructor(props) {
     super(props);
@@ -15,15 +16,16 @@ export default class Loading extends Component {
       visible: false
     };
   }
-  componentWillMount(){
-    this.setState({visible: this.props.loadingVisible})
-  }
   componentWillReceiveProps(nextProps) {
-    nextProps.loadingVisible ? this.setState({visible:true}) : this.setState({visible:false})
+    if(nextProps.loadingVisible !== this.props.loadingVisible && nextProps.loadingVisible){
+      this.setState({visible:true})
+    }else{
+      this.setState({visible:false})
+    }
   }
   static defaultProps = {
     opacity: .3,
-    loadingText:'loading...',
+    loadingText:I18n.t('loading'),
     bgColor: '#fff'
 
   }
@@ -42,6 +44,7 @@ export default class Loading extends Component {
           style={[pubS.center,{flex:1,}]}
           backdropColor={this.props.bgColor}
           backdropOpacity={this.props.opacity}
+          useNativeDriver={true}
         >
          <View style={{alignSelf:'center'}}>
            <ActivityIndicator  

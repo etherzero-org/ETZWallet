@@ -6,15 +6,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert
+  Alert,
+  StatusBar,
+  Platform
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle } from '../../styles/'
 import { setScaleText, scaleSize } from '../../utils/adapter'
 import { TextInputComponent,Loading } from '../../components/'
-import Mailer from 'react-native-mail'
+// import Mailer from 'react-native-mail'
 import I18n from 'react-native-i18n'
-import Toast from 'react-native-toast'
 class Support extends Component{
   constructor(props){
     super(props)
@@ -40,7 +41,6 @@ class Support extends Component{
   }
 
   sendEmail = () => {
-    Toast.showLongBottom('Stay tuned')
     // const { emaiVal, contentVal } = this.state
     // let reg = /^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/
     // if(!reg.test(emaiVal)){
@@ -102,7 +102,12 @@ class Support extends Component{
   render(){
     const { emaiVal, eNameWarning, contentVal, contentWarning, } = this.state
     return(
-      <View style={{flex:1,backgroundColor:'#fff'}}>
+      <View style={{flex:1,backgroundColor:'#fff'}}>  
+        {
+          Platform.OS === 'ios' ?
+          <StatusBar backgroundColor="#000000"  barStyle="dark-content" animated={true} />
+          : null
+        }
         <TextInputComponent
           placeholder={I18n.t('your_email')}
           value={emaiVal}

@@ -1,5 +1,4 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-
 buildscript {
     repositories {
         jcenter()
@@ -41,3 +40,19 @@ allprojects {
         }
     }
 }
+
+
+
+
+
+//react-native-device-info
+ext {
+    // dependency versions
+    googlePlayServicesVersion = "+" // default: "+"
+    compileSdkVersion = 25 // default: 23
+    buildToolsVersion = "25.0.1" // default: "25.0.2"
+    targetSdkVersion = 22 // default: 22
+}
+
+
+

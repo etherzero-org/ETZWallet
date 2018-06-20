@@ -1,26 +1,166 @@
 import * as types from '../constants/tradingManageConstant'
+import tradingDBOpation from '../utils/tradingDBOpation'
 const insert2TradingDBAction = (data) => {
-	const onInsert = () => {
+	const start = () => {
 		return {
-			type: types.INSERT_TO_DB,
+			type: types.SAVE_TO_RECORD_START,
+		}
+	}
+	const suc = (sucdata) => {
+		return {
+			type: types.SAVE_TO_RECORD_SUC,
 			payload: {
-				tx_hash: data.tx_hash,
-				tx_value: data.tx_value,
-				tx_sender: data.tx_sender,
-				tx_receiver: data.tx_receiver,
-				tx_note: data.tx_note,
-				tx_token: data.tx_token,
-				tx_result: data.tx_result,
+				sucdata,
+				insertMark: data.tx_random,
+				isToken: data.isToken,
+				txPassword: data.txPassword,
+				data,
+			}
+		}
+	}
+	const fail = (msg) => {
+		return {
+			type: types.SAVE_TO_RECORD_FAIL,
+			payload: {
+				msg
 			}
 		}
 	}
 	return(dispatch,getState) => {
-		dispatch(onInsert())
+		dispatch(start()),
+		tradingDBOpation.tradingSaveToRecord({
+			parames: {
+				data
+			},
+			saveSuccess: (sucdata) => {dispatch(suc(sucdata))},
+			saveFail: (msg) => {dispatch(fail(msg))}
+		})
 	}
 }
 
+const makeTxByETZAction = (info) => {
+	const start = () => {
+		return {
+			type: types.MAKE_TX_BY_ETZ_START,
+		}
+	}
+	const suc = (sucdata,mark) => {
+		return {
+			type: types.MAKE_TX_BY_ETZ_SUC,
+			payload: {
+				sucdata,
+				mark
+			}
+		}
+	}
+	const fail = (faildata,msg,order,mark) => {
+		return {
+			type: types.MAKE_TX_BY_ETZ_FAIL,
+			payload: {
+				faildata,
+				msg,
+				order,
+				mark
+			}
+		}
+	}
+	return(dispatch,getState) => {
+		dispatch(start()),
+
+		tradingDBOpation.makeTxByETZ({
+			parames: {
+				info
+			},
+			txETZSuccess: (sucdata1,sucdata2) => {dispatch(suc(sucdata1,sucdata2))},
+			txETZFail: (faildata,msg,order,mark) => {dispatch(fail(faildata,msg,order,mark))}
+		})
+	}
+}
+
+const makeTxByTokenAction = (info) => {
+	const start = () => {
+		return {
+			type: types.MAKE_TX_BY_ETZ_START,
+		}
+	}
+	const suc = (sucdata,mark) => {
+		return {
+			type: types.MAKE_TX_BY_ETZ_SUC,
+			payload: {
+				sucdata,
+				mark
+			}
+		}
+	}
+	const fail = (faildata,msg,order,mark) => {
+		return {
+			type: types.MAKE_TX_BY_ETZ_FAIL,
+			payload: {
+				faildata,
+				msg,
+				order,
+				mark
+			}
+		}
+	}
+	return(dispatch,getState) => {
+		
+		dispatch(start()),
+
+		tradingDBOpation.makeTxByToken({
+			parames: {
+				info
+			},
+			txTokenSuccess: (sucdata1,sucdata2) => {dispatch(suc(sucdata1,sucdata2))},
+			txTokenFail: (faildata,msg,order,mark) => {dispatch(fail(faildata,msg,order,mark))}
+		})
+	}
+}
+
+const resetTxStatusAction = () => {
+	console.log('初始化action')
+	const reset = () => {
+		return {
+			type: types.RESET_TX_STATUS
+		}
+	}
+	return (dispatch,getState) => {
+		dispatch(reset())
+	}
+}
+const showLoadingAction = (visible,text) => {
+	const show = () => {
+		return {
+			type: types.SHOW_LOADING,
+			payload:{
+				visible,
+				text
+			}
+		}
+	}
+	return (dispatch,getState) => {
+		dispatch(show())
+	}
+}
+const updateTxListAction = (status) => {
+	const update = () => {
+		return {
+			type: types.UPDATE_TX_LIST,
+			payload:{
+				status
+			}
+		}
+	}
+	return (dispatch,getState) => {
+		dispatch(update())
+	}
+}
 
 export {
 	insert2TradingDBAction,
-	
+	makeTxByETZAction,
+	makeTxByTokenAction,
+	resetTxStatusAction,
+	showLoadingAction,
+	updateTxListAction,
 }

@@ -7,24 +7,27 @@ import {
   StyleSheet,
   ScrollView,
   FlatList,
+  StatusBar,
+  Platform
 } from 'react-native'
 
 import { pubS,DetailNavigatorStyle } from '../../styles/'
-import { setScaleText, scaleSize } from '../../utils/adapter'
-import { toHome } from '../../root'
+import { setScaleText, scaleSize,ifIphoneX } from '../../utils/adapter'
 import { connect } from 'react-redux'
 import { sliceAddress,splitDecimal } from '../../utils/splitNumber'
-const Wallet = require('ethereumjs-wallet')
-import UserSQLite from '../../utils/accountDB'
-const sqLite = new UserSQLite();  
-let db
 import I18n from 'react-native-i18n'
+import { refreshManageBalanceAction } from '../../actions/accountManageAction'
 class AccountCard extends Component {
   render(){
     const { accountName, accountPsd, accountTotal, accountUnit, accountBackUp, backupState} = this.props
     return(
       <TouchableOpacity style={styles.cardView} activeOpacity={.7} onPress={accountBackUp}>
         <View style={[styles.cardTopView,pubS.bottomStyle,pubS.rowCenterJus]}>
+          {
+            Platform.OS === 'ios' ?
+            <StatusBar backgroundColor="#000000"  barStyle="dark-content" animated={true} />
+            : null
+          }
           <View style={[pubS.rowCenter]}>
             <Image source={require('../../images/xhdpi/Penguin.png')} style={{height: scaleSize(55),width: scaleSize(55)}}/>
             <View style={{marginLeft: scaleSize(30)}}>
@@ -56,72 +59,47 @@ class AccountManage extends Component{
   constructor(props){
     super(props)
     this.state = {
-      cardItems: [],
-      currentAccountId: -1
+      
     } 
   }
 
   componentWillMount(){
-
-    
-
-    this.searchAccountList()
-
+    //更新balance数据
+    const { globalAccountsList } = this.props.accountManageReducer
+    this.props.dispatch(refreshManageBalanceAction(globalAccountsList))
   }
 
   componentWillReceiveProps(nextProps){
     if(this.props.accountManageReducer.deleteSuc !== nextProps.accountManageReducer.deleteSuc && nextProps.accountManageReducer.deleteSuc){
-      this.searchAccountList()
+      //console.log('删除成功')
     }
     if(this.props.accountManageReducer.updateBackupSucc !== nextProps.accountManageReducer.updateBackupSucc && nextProps.accountManageReducer.updateBackupSucc){
-      this.searchAccountList()
+      console.log('更新备份状态成功')
     }
   }
-  searchAccountList = () => {
-    const { cardItems } = this.state
-    if(!db){  
-      db = sqLite.open()  
-    }  
-    db.transaction((tx)=>{  
-      tx.executeSql("select * from account ", [],(tx,results)=>{
-        var len = results.rows.length 
-        let empty = [] 
-        for(let i=0; i<len; i++){  
-          var u = results.rows.item(i)
-          empty.push(u)
-          this.setState({
-            cardItems: empty
-          })
 
-          if(u.is_selected === 1){
-            this.setState({
-              currentAccountId: u.id
-            })
-          }
-        }  
-      })  
-    },(error)=>{
-      console.log('打印异常信息 ',error) 
-    })
-  }
-  toDetail = (address,name,id) => {
+  toDetail = (address,name,id,pro) => {
+    const { currentAccount, globalAccountsList } = this.props.accountManageReducer
     this.props.navigator.push({
       screen: 'back_up_account',
       title: name,
       navigatorStyle: DetailNavigatorStyle,
+      backButtonTitle:I18n.t('back'),
+      backButtonHidden:false,
       // overrideBackPress:true,
       passProps: {
         userName: name,
         address: address,
         b_id: id,
-        accountsNumber: this.state.cardItems.length,
-        currentAccountId: this.state.currentAccountId
+        accountsNumber: globalAccountsList.length,
+        currentAccountId: currentAccount.id,
+        psdPrompt: pro || ''
       },
       // navigatorButtons: {
       //   rightButtons: [
       //     {
       //       title: 'save',
-      //       id: 'save_back_up_info'
+      //       id: 'save_change'
       //     }
       //   ]
       // }
@@ -132,6 +110,8 @@ class AccountManage extends Component{
     this.props.navigator.push({
       screen: 'create_account',
       title:I18n.t('create'),
+      backButtonTitle:I18n.t('back'),
+      backButtonHidden:false,
       navigatorStyle: DetailNavigatorStyle,
     })
   }
@@ -139,37 +119,36 @@ class AccountManage extends Component{
     this.props.navigator.push({
       screen: 'import_account',
       title:I18n.t('import'),
+      backButtonTitle:I18n.t('back'),
+      backButtonHidden:false,
       navigatorStyle: DetailNavigatorStyle,
     })
   }
 
-  renderItem = (item) => {
-    let res = item.item
-    // console.log('1111111111111111111111',res)
-    return(
-      <AccountCard
-        accountName={res.account_name}
-        accountPsd={sliceAddress(`0x${res.address}`,10)}
-        accountTotal={splitDecimal(res.assets_total)}
-        accountUnit={'ether'}
-        accountBackUp={() => this.toDetail(res.address,res.account_name,res.id)}
-        backupState={res.backup_status}
-      />
-    )
-  }
+ 
   render(){
-    // const { localKeyStore, userName } = this.props.getLocalDataReducer
-    const { cardItems } = this.state
+    const { currentAccount, globalAccountsList } = this.props.accountManageReducer
     return(
       <View style={[pubS.container,{backgroundColor:'#F5F7FB'}]}>
         <View style={{marginBottom: scaleSize(96)}}>
-          <FlatList
-            data={cardItems}
-            renderItem={this.renderItem}
-            keyExtractor = {(item, index) => index}
-            // ListFooterComponent={this.ListFooterComponent}
-            // ListHeaderComponent={this.ListHeaderComponent}
-          />
+          
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {
+              globalAccountsList.map((res,index) => {
+                return(
+                  <AccountCard
+                    key={index}
+                    accountName={res.account_name}
+                    accountPsd={sliceAddress(`0x${res.address}`,10)}
+                    accountTotal={splitDecimal(res.assets_total)}
+                    accountUnit={'ether'}
+                    accountBackUp={() => this.toDetail(res.address,res.account_name,res.id,res.password_promp)}
+                    backupState={res.backup_status}
+                  />
+                )
+              })
+            }
+          </ScrollView>
         </View>
         <View style={[{width: '100%',bottom:0,position:'absolute'},pubS.rowCenter]}>
           <TouchableOpacity activeOpacity={.7} onPress={this.createAccountBtn} style={[styles.btnStyle,pubS.center,{backgroundColor:'#2B8AFF'}]}>
@@ -190,31 +169,100 @@ const styles = StyleSheet.create({
     width: '50%',
   },
   backupBtn:{
-    height: scaleSize(34),
-    width:scaleSize(104),
-    borderWidth:1,
-    borderColor: '#FF6060',
-    borderRadius: scaleSize(6),
+    ...ifIphoneX(
+      {
+        height: scaleSize(34),
+        width:scaleSize(88),
+        borderWidth:1,
+        borderColor: '#FF6060',
+        borderRadius: scaleSize(6),
+      },
+      {
+        height: scaleSize(34),
+        width:scaleSize(104),
+        borderWidth:1,
+        borderColor: '#FF6060',
+        borderRadius: scaleSize(6),
+      },
+      {
+        height: scaleSize(34),
+        width:scaleSize(104),
+        borderWidth:1,
+        borderColor: '#FF6060',
+        borderRadius: scaleSize(6),
+      }
+    )
+
 
   },
   cardBottomView: {
-    height: scaleSize(114),
-    width: scaleSize(620),
-    alignSelf:'center',
+    ...ifIphoneX(
+      {
+        height: scaleSize(114),
+        width: 345,
+        alignSelf:'center',
+      },
+      {
+        height: scaleSize(114),
+        width: scaleSize(620),
+        alignSelf:'center',
+      },
+      {
+        height: scaleSize(114),
+        width: scaleSize(620),
+        alignSelf:'center',
+      }
+    )
+
   },
   cardTopView: {
-    height: scaleSize(140),
-    width: scaleSize(620),
-    alignSelf:'center',
+    ...ifIphoneX(
+      {
+        height: scaleSize(140),
+        width: 345,
+        alignSelf:'center',
+      },
+      {
+        height: scaleSize(140),
+        width: scaleSize(620),
+        alignSelf:'center',
+      },
+      {
+        height: scaleSize(140),
+        width: scaleSize(620),
+        alignSelf:'center',
+      }
+    )
+
 
   },
   cardView: {
-    width: scaleSize(702),
-    height: scaleSize(255),
-    backgroundColor: '#fff',
-    borderRadius: 4,
-    alignSelf:'center',
-    marginTop: scaleSize(30),
+    ...ifIphoneX(
+      {
+        width: 355,
+        height: scaleSize(255),
+        backgroundColor: '#fff',
+        borderRadius: 4,
+        alignSelf:'center',
+        marginTop: scaleSize(30),
+      },
+      {
+        width: scaleSize(702),
+        height: scaleSize(255),
+        backgroundColor: '#fff',
+        borderRadius: 4,
+        alignSelf:'center',
+        marginTop: scaleSize(30),
+      },
+      {
+        width: scaleSize(702),
+        height: scaleSize(255),
+        backgroundColor: '#fff',
+        borderRadius: 4,
+        alignSelf:'center',
+        marginTop: scaleSize(30),
+      }
+    )
   },
 })
 export default connect(

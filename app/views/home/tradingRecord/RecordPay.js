@@ -37,7 +37,7 @@ class RecordPay extends Component{
   ListEmptyComponent = () => {
     return(
       <View style={{marginTop: 10,alignItems:'center'}}>
-        <Text>{I18n.t('no_tx_info')}</Text>
+        <Text style={pubS.font24_4}>{I18n.t('no_tx_info')}</Text>
       </View>
     )
   }
@@ -47,7 +47,7 @@ class RecordPay extends Component{
         <FlatList
           data={this.props.list}
           renderItem={this.renderPay}
-          keyExtractor = {(item, index) => index}
+          keyExtractor={(item, index) => index.toString()}
           ListEmptyComponent={this.ListEmptyComponent}
         />
       </View>

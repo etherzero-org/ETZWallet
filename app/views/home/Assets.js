@@ -24,7 +24,7 @@ import SwitchWallet from './SwitchWallet'
 import { switchDrawer } from '../../utils/switchDrawer'
 
 import { splitDecimal, scientificToNumber} from '../../utils/splitNumber'
-import {Scan} from '../../components/'
+import {Scan, VersionUpdateModal,} from '../../components/'
 
 import { insertToTokenAction,initSelectedListAction,refreshTokenAction,fetchTokenAction } from '../../actions/tokenManageAction'
 import { insert2TradingDBAction,resetTxStatusAction,updateTxListAction } from '../../actions/tradingManageAction'
@@ -597,8 +597,12 @@ class Assets extends Component{
             </TouchableOpacity>
           </ScrollView>
         </Drawer>
+        {
+        // <VersionUpdateModal
+
+        // />
           
-        
+        }
       </View>
     )
   }

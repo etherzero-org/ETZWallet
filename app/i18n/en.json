@@ -117,7 +117,7 @@
   "input_password":"please enter the password",
   "sending":"sending",
   "send_successful":"send successfully",
-  "note_1":"Memo(optional)",
+  "note_1":"Note(optional)",
   "to_address":"To",
   "from_address":"From",
   "amount_1":"Amount",

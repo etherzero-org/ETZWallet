@@ -360,6 +360,31 @@ class BackUpAccount extends Component{
       navigatorStyle: DetailNavigatorStyle,
     })
   }
+
+  onShare = () => {
+    const { keyStore } = this.state
+    let k = JSON.stringify(keyStore)
+
+    Share.share({
+      message: k,
+      title: I18n.t('backup_keystore_title'),
+    }, {
+      dialogTitle: I18n.t('share_your_keystore'),
+    })
+    .then(this._showResult)
+    .catch((error) => Toast.showLongBottom(I18n.t('share_error')))
+  }
+  _showResult = (result) => {
+    if (result.action === Share.sharedAction) {
+      if (result.activityType) {
+
+      } else {
+
+      }
+    } else if (result.action === Share.dismissedAction) {
+      Toast.showLongBottom(I18n.t('share_error'))
+    }
+  }
   render(){
     const { iptPsdVisible,psdVal,pKeyVisible,privKey,keyStore,dVisible, visible } = this.state
     const { isLoading,delMnemonicSuc } = this.props.accountManageReducer
@@ -412,7 +437,10 @@ class BackUpAccount extends Component{
             bgColor={'#BDC0C6'}
           />
         </View>
-
+        <Button
+          onPress={this.onShare}
+          title={'分享'}
+        />
         <Modal
           isVisible={iptPsdVisible}
           onBackButtonPress={this.onHide}
